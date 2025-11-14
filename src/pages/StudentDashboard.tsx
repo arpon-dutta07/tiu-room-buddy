@@ -112,7 +112,7 @@ const StudentDashboard = () => {
                 <TabsTrigger value="4">4th Floor</TabsTrigger>
                 <TabsTrigger value="5">5th Floor</TabsTrigger>
                 <TabsTrigger value="6">6th Floor</TabsTrigger>
-              </Tabs>
+              </TabsList>
               <TabsContent value={selectedFloor.toString()} className="mt-6">
                 {loadingRooms ? (
                   <div className="text-center py-8">Loading rooms...</div>
