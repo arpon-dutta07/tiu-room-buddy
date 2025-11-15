@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import RoomGrid from '@/components/RoomGrid';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const StudentDashboard = () => {
   const { user, userRole, loading, signOut } = useAuth();
@@ -78,10 +79,13 @@ const StudentDashboard = () => {
             <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
             <p className="text-muted-foreground">Techno India University - View Room Availability</p>
           </div>
-          <Button variant="outline" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex gap-2">
+            <ThemeToggle />
+            <Button variant="outline" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         <Card className="mb-6 bg-muted/50">

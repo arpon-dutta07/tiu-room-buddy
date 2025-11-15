@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import RoomGrid from '@/components/RoomGrid';
 import AddRoomDialog from '@/components/AddRoomDialog';
 import AssignRoomDialog from '@/components/AssignRoomDialog';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const AdminDashboard = () => {
   const { user, userRole, loading, signOut } = useAuth();
@@ -105,10 +106,13 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-muted-foreground">Techno India University - Room Management</p>
           </div>
-          <Button variant="outline" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex gap-2">
+            <ThemeToggle />
+            <Button variant="outline" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         <Card className="mb-6">
