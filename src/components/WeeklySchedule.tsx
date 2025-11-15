@@ -53,8 +53,9 @@ const WeeklySchedule = () => {
 
     if (routineError) {
       toast.error('Failed to fetch routines');
-      console.error(routineError);
+      console.error('Routine error:', routineError);
     } else {
+      console.log(`Found ${routineData?.length || 0} routines for day ${selectedDay}:`, routineData);
       setRoutines(routineData || []);
     }
 
@@ -66,8 +67,9 @@ const WeeklySchedule = () => {
 
     if (roomError) {
       toast.error('Failed to fetch rooms');
-      console.error(roomError);
+      console.error('Room error:', roomError);
     } else {
+      console.log(`Found ${roomData?.length || 0} rooms:`, roomData);
       setRooms(roomData || []);
     }
 
@@ -172,27 +174,27 @@ const WeeklySchedule = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium mb-2">Available Rooms:</p>
+                  <p className="text-sm font-medium mb-2">Click a room to allocate it for this class:</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                     {rooms
                       .filter((room) => isRoomAvailable(room, routine))
                       .map((room) => (
                         <Button
                           key={room.id}
-                          variant="outline"
+                          variant={room.status === 'free' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => allocateRoom(routine, room.id)}
                           className="h-auto py-2 flex flex-col items-start"
                         >
                           <span className="font-semibold">{room.room_number}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {room.status === 'free' ? 'Free' : 'Available later'}
+                          <span className="text-xs opacity-90">
+                            {room.status === 'free' ? '✓ Free' : '✓ Available'}
                           </span>
                         </Button>
                       ))}
                   </div>
                   {rooms.filter((room) => isRoomAvailable(room, routine)).length === 0 && (
-                    <p className="text-sm text-muted-foreground">No rooms available for this time slot</p>
+                    <p className="text-sm text-destructive">⚠ No rooms available for this time slot</p>
                   )}
                 </div>
               </CardContent>
