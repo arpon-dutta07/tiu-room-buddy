@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import RoomGrid from '@/components/RoomGrid';
 import AddRoomDialog from '@/components/AddRoomDialog';
 import AssignRoomDialog from '@/components/AssignRoomDialog';
+import WeeklySchedule from '@/components/WeeklySchedule';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const AdminDashboard = () => {
@@ -20,6 +21,7 @@ const AdminDashboard = () => {
   const [isAddRoomOpen, setIsAddRoomOpen] = useState(false);
   const [isAssignRoomOpen, setIsAssignRoomOpen] = useState(false);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [viewMode, setViewMode] = useState<'floor' | 'schedule'>('floor');
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
@@ -119,7 +121,7 @@ const AdminDashboard = () => {
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="flex gap-4">
+          <CardContent className="flex gap-4 flex-wrap">
             <Button onClick={() => setIsAddRoomOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Room
@@ -128,35 +130,52 @@ const AdminDashboard = () => {
               <Plus className="h-4 w-4 mr-2" />
               Assign Room
             </Button>
+            <Button 
+              onClick={() => setViewMode(viewMode === 'floor' ? 'schedule' : 'floor')} 
+              variant="outline"
+            >
+              {viewMode === 'floor' ? 'View Weekly Schedule' : 'View Floor Plan'}
+            </Button>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Floor Selector</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedFloor.toString()} onValueChange={(v) => setSelectedFloor(parseInt(v))}>
-              <TabsList className="grid grid-cols-8 w-full">
-                <TabsTrigger value="0">Ground</TabsTrigger>
-                <TabsTrigger value="1">1st</TabsTrigger>
-                <TabsTrigger value="2">2nd</TabsTrigger>
-                <TabsTrigger value="3">3rd</TabsTrigger>
-                <TabsTrigger value="4">4th</TabsTrigger>
-                <TabsTrigger value="5">5th</TabsTrigger>
-                <TabsTrigger value="6">6th</TabsTrigger>
-                <TabsTrigger value="7">7th</TabsTrigger>
-              </TabsList>
-              <TabsContent value={selectedFloor.toString()} className="mt-6">
-                {loadingRooms ? (
-                  <div className="text-center py-8">Loading rooms...</div>
-                ) : (
-                  <RoomGrid rooms={rooms} onFreeRoom={handleFreeRoom} isAdmin={true} />
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        {viewMode === 'floor' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Floor Selector</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={selectedFloor.toString()} onValueChange={(v) => setSelectedFloor(parseInt(v))}>
+                <TabsList className="grid grid-cols-8 w-full">
+                  <TabsTrigger value="0">Ground</TabsTrigger>
+                  <TabsTrigger value="1">1st</TabsTrigger>
+                  <TabsTrigger value="2">2nd</TabsTrigger>
+                  <TabsTrigger value="3">3rd</TabsTrigger>
+                  <TabsTrigger value="4">4th</TabsTrigger>
+                  <TabsTrigger value="5">5th</TabsTrigger>
+                  <TabsTrigger value="6">6th</TabsTrigger>
+                  <TabsTrigger value="7">7th</TabsTrigger>
+                </TabsList>
+                <TabsContent value={selectedFloor.toString()} className="mt-6">
+                  {loadingRooms ? (
+                    <div className="text-center py-8">Loading rooms...</div>
+                  ) : (
+                    <RoomGrid rooms={rooms} onFreeRoom={handleFreeRoom} isAdmin={true} />
+                  )}
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Weekly Schedule & Room Allocation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WeeklySchedule />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <AddRoomDialog open={isAddRoomOpen} onOpenChange={setIsAddRoomOpen} onSuccess={fetchRooms} />
