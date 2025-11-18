@@ -88,6 +88,7 @@ export type Database = {
       }
       routines: {
         Row: {
+          allocated_room_id: string | null
           batch: string
           created_at: string
           day_of_week: number
@@ -101,6 +102,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allocated_room_id?: string | null
           batch: string
           created_at?: string
           day_of_week: number
@@ -114,6 +116,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allocated_room_id?: string | null
           batch?: string
           created_at?: string
           day_of_week?: number
@@ -126,7 +129,15 @@ export type Database = {
           teacher_name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "routines_allocated_room_id_fkey"
+            columns: ["allocated_room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

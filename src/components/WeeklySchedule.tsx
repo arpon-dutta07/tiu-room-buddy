@@ -15,6 +15,10 @@ interface Routine {
   batch: string;
   teacher_name: string;
   default_room: string | null;
+  allocated_room_id: string | null;
+  rooms?: {
+    room_number: string;
+  };
 }
 
 interface Room {
@@ -44,10 +48,10 @@ const WeeklySchedule = () => {
   const fetchData = async () => {
     setLoading(true);
     
-    // Fetch routines for selected day
+    // Fetch routines for selected day with allocated room info
     const { data: routineData, error: routineError } = await supabase
       .from('routines')
-      .select('*')
+      .select('*, rooms(room_number)')
       .eq('day_of_week', selectedDay)
       .order('start_time');
 
@@ -77,62 +81,59 @@ const WeeklySchedule = () => {
   };
 
   const allocateRoom = async (routine: Routine, roomId: string) => {
-    const today = new Date();
-    const dayOffset = selectedDay - today.getDay();
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + dayOffset);
+    // Check if this room is already allocated for overlapping times on this day
+    const { data: conflictingRoutines } = await supabase
+      .from('routines')
+      .select('*, rooms(room_number)')
+      .eq('day_of_week', selectedDay)
+      .eq('allocated_room_id', roomId)
+      .neq('id', routine.id);
 
-    const [startHour, startMinute] = routine.start_time.split(':');
-    const [endHour, endMinute] = routine.end_time.split(':');
+    if (conflictingRoutines && conflictingRoutines.length > 0) {
+      // Check for time conflicts
+      const hasConflict = conflictingRoutines.some((cr) => {
+        const crStart = cr.start_time;
+        const crEnd = cr.end_time;
+        const routineStart = routine.start_time;
+        const routineEnd = routine.end_time;
 
-    const occupiedFrom = new Date(targetDate);
-    occupiedFrom.setHours(parseInt(startHour), parseInt(startMinute), 0);
+        // Check if times overlap
+        return !(routineEnd <= crStart || routineStart >= crEnd);
+      });
 
-    const occupiedTill = new Date(targetDate);
-    occupiedTill.setHours(parseInt(endHour), parseInt(endMinute), 0);
+      if (hasConflict) {
+        const conflictRoom = conflictingRoutines[0].rooms?.room_number;
+        toast.error(`Room ${conflictRoom} is already allocated for this time slot`);
+        return;
+      }
+    }
 
+    // Permanently allocate the room to this routine
     const { error } = await supabase
-      .from('rooms')
-      .update({
-        status: 'occupied',
-        allocated_to: `${routine.stream} - ${routine.batch}`,
-        subject: routine.subject,
-        batch: routine.batch,
-        teacher_name: routine.teacher_name,
-        occupied_from: occupiedFrom.toISOString(),
-        occupied_till: occupiedTill.toISOString(),
-      })
-      .eq('id', roomId);
+      .from('routines')
+      .update({ allocated_room_id: roomId })
+      .eq('id', routine.id);
 
     if (error) {
       toast.error('Failed to allocate room');
       console.error(error);
     } else {
-      toast.success(`Room allocated for ${routine.stream} ${routine.batch}`);
+      toast.success(`Room permanently allocated for ${routine.stream} ${routine.batch}`);
       fetchData();
     }
   };
 
   const isRoomAvailable = (room: Room, routine: Routine) => {
-    if (room.status === 'free') return true;
+    // Check if any other routine on this day has this room at overlapping times
+    const conflictingRoutine = routines.find((r) => {
+      if (r.id === routine.id) return false;
+      if (r.allocated_room_id !== room.id) return false;
 
-    if (room.occupied_from && room.occupied_till) {
-      const routineStart = new Date();
-      const [startHour, startMinute] = routine.start_time.split(':');
-      routineStart.setHours(parseInt(startHour), parseInt(startMinute), 0);
+      // Check if times overlap
+      return !(routine.end_time <= r.start_time || routine.start_time >= r.end_time);
+    });
 
-      const routineEnd = new Date();
-      const [endHour, endMinute] = routine.end_time.split(':');
-      routineEnd.setHours(parseInt(endHour), parseInt(endMinute), 0);
-
-      const occupiedFrom = new Date(room.occupied_from);
-      const occupiedTill = new Date(room.occupied_till);
-
-      // Check if routine time doesn't overlap with current occupation
-      return routineEnd <= occupiedFrom || routineStart >= occupiedTill;
-    }
-
-    return false;
+    return !conflictingRoutine;
   };
 
   if (loading) {
@@ -162,42 +163,46 @@ const WeeklySchedule = () => {
           </Card>
         ) : (
           routines.map((routine) => (
-            <Card key={routine.id}>
+            <Card key={routine.id} className={routine.allocated_room_id ? 'border-red-500 bg-red-50 dark:bg-red-950/20' : ''}>
               <CardHeader>
                 <CardTitle className="text-lg">
                   {routine.start_time} - {routine.end_time} | {routine.subject}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {routine.stream} - {routine.batch} | {routine.teacher_name}
-                  {routine.default_room && ` | Preferred: Room ${routine.default_room}`}
                 </p>
+                {routine.allocated_room_id && routine.rooms && (
+                  <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                    ✓ Allocated: Room {routine.rooms.room_number}
+                  </p>
+                )}
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium mb-2">Click a room to allocate it for this class:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                    {rooms
-                      .filter((room) => isRoomAvailable(room, routine))
-                      .map((room) => (
-                        <Button
-                          key={room.id}
-                          variant={room.status === 'free' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => allocateRoom(routine, room.id)}
-                          className="h-auto py-2 flex flex-col items-start"
-                        >
-                          <span className="font-semibold">{room.room_number}</span>
-                          <span className="text-xs opacity-90">
-                            {room.status === 'free' ? '✓ Free' : '✓ Available'}
-                          </span>
-                        </Button>
-                      ))}
+              {!routine.allocated_room_id && (
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium mb-2">Click a room to permanently allocate:</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                      {rooms
+                        .filter((room) => isRoomAvailable(room, routine))
+                        .map((room) => (
+                          <Button
+                            key={room.id}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => allocateRoom(routine, room.id)}
+                            className="h-auto py-2 flex flex-col items-start"
+                          >
+                            <span className="font-semibold">{room.room_number}</span>
+                            <span className="text-xs opacity-90">✓ Available</span>
+                          </Button>
+                        ))}
+                    </div>
+                    {rooms.filter((room) => isRoomAvailable(room, routine)).length === 0 && (
+                      <p className="text-sm text-destructive">⚠ No rooms available for this time slot</p>
+                    )}
                   </div>
-                  {rooms.filter((room) => isRoomAvailable(room, routine)).length === 0 && (
-                    <p className="text-sm text-destructive">⚠ No rooms available for this time slot</p>
-                  )}
-                </div>
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
           ))
         )}
