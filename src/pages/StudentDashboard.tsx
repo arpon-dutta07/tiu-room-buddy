@@ -1,75 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
-import { toast } from 'sonner';
-import RoomGrid from '@/components/RoomGrid';
+import { FloorRoomGrid } from '@/components/FloorRoomGrid';
+import { RoomTimelineDialog } from '@/components/RoomTimelineDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const StudentDashboard = () => {
-  const { user, userRole, loading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [selectedFloor, setSelectedFloor] = useState(1);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [loadingRooms, setLoadingRooms] = useState(true);
+  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [selectedDay, setSelectedDay] = useState(1);
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
-  useEffect(() => {
-    if (!loading && (!user || userRole !== 'student')) {
-      navigate('/');
-    }
-  }, [user, userRole, loading, navigate]);
-
-  useEffect(() => {
-    fetchRooms();
-
-    const channel = supabase
-      .channel('student-rooms')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'rooms',
-        },
-        () => {
-          fetchRooms();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [selectedFloor]);
-
-  const fetchRooms = async () => {
-    setLoadingRooms(true);
-    const { data, error } = await supabase
-      .from('rooms')
-      .select('*')
-      .eq('floor_number', selectedFloor)
-      .order('room_number');
-
-    if (error) {
-      toast.error('Failed to fetch rooms');
-      console.error(error);
-    } else {
-      setRooms(data || []);
-    }
-    setLoadingRooms(false);
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    );
-  }
+  const handleRoomClick = (room: any) => {
+    setSelectedRoom(room);
+    setTimelineOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -81,52 +35,32 @@ const StudentDashboard = () => {
           </div>
           <div className="flex gap-2">
             <ThemeToggle />
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="outline" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
           </div>
         </div>
 
-        <Card className="mb-6 bg-muted/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-success"></div>
-                <span className="text-sm">Free</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-destructive"></div>
-                <span className="text-sm">Occupied</span>
-              </div>
-            </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Welcome, {user?.email}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Select a day, time slot, and floor to view room availability. Click any room to see its full day schedule.
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Floor Selector (1st to 6th Floor Only)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedFloor.toString()} onValueChange={(v) => setSelectedFloor(parseInt(v))}>
-              <TabsList className="grid grid-cols-6 w-full">
-                <TabsTrigger value="1">1st Floor</TabsTrigger>
-                <TabsTrigger value="2">2nd Floor</TabsTrigger>
-                <TabsTrigger value="3">3rd Floor</TabsTrigger>
-                <TabsTrigger value="4">4th Floor</TabsTrigger>
-                <TabsTrigger value="5">5th Floor</TabsTrigger>
-                <TabsTrigger value="6">6th Floor</TabsTrigger>
-              </TabsList>
-              <TabsContent value={selectedFloor.toString()} className="mt-6">
-                {loadingRooms ? (
-                  <div className="text-center py-8">Loading rooms...</div>
-                ) : (
-                  <RoomGrid rooms={rooms} isAdmin={false} />
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        <FloorRoomGrid onRoomClick={handleRoomClick} isAdmin={false} />
+
+        <RoomTimelineDialog
+          room={selectedRoom}
+          day={selectedDay}
+          open={timelineOpen}
+          onOpenChange={setTimelineOpen}
+        />
       </div>
     </div>
   );
