@@ -1,59 +1,41 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Plus } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import RoomGrid from '@/components/RoomGrid';
-import AddRoomDialog from '@/components/AddRoomDialog';
-import AssignRoomDialog from '@/components/AssignRoomDialog';
 import WeeklySchedule from '@/components/WeeklySchedule';
+import AddRoomDialog from '@/components/AddRoomDialog';
+import { FloorRoomGrid } from '@/components/FloorRoomGrid';
+import { RoomTimelineDialog } from '@/components/RoomTimelineDialog';
+import { BatchManagement } from '@/components/BatchManagement';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const AdminDashboard = () => {
-  const { user, userRole, loading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [selectedFloor, setSelectedFloor] = useState(1);
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [selectedDay, setSelectedDay] = useState(1);
+  const [timelineOpen, setTimelineOpen] = useState(false);
   const [isAddRoomOpen, setIsAddRoomOpen] = useState(false);
-  const [isAssignRoomOpen, setIsAssignRoomOpen] = useState(false);
-  const [loadingRooms, setLoadingRooms] = useState(true);
-  const [viewMode, setViewMode] = useState<'floor' | 'schedule'>('floor');
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [selectedFloor, setSelectedFloor] = useState(1);
 
-  useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
-      navigate('/');
-    }
-  }, [user, userRole, loading, navigate]);
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
-  useEffect(() => {
-    fetchRooms();
-
-    const channel = supabase
-      .channel('admin-rooms')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'rooms',
-        },
-        () => {
-          fetchRooms();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [selectedFloor]);
+  const handleRoomClick = (room: any) => {
+    setSelectedRoom(room);
+    setTimelineOpen(true);
+  };
 
   const fetchRooms = async () => {
-    setLoadingRooms(true);
     const { data, error } = await supabase
       .from('rooms')
       .select('*')
@@ -66,7 +48,6 @@ const AdminDashboard = () => {
     } else {
       setRooms(data || []);
     }
-    setLoadingRooms(false);
   };
 
   const handleFreeRoom = async (roomId: string) => {
@@ -92,13 +73,6 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -110,76 +84,63 @@ const AdminDashboard = () => {
           </div>
           <div className="flex gap-2">
             <ThemeToggle />
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="outline" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
           </div>
         </div>
 
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Welcome, Administrator</CardTitle>
+            <p className="text-sm text-muted-foreground">Logged in as: {user?.email}</p>
           </CardHeader>
-          <CardContent className="flex gap-4 flex-wrap">
-            <Button onClick={() => setIsAddRoomOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Room
-            </Button>
-            <Button onClick={() => setIsAssignRoomOpen(true)} variant="secondary">
-              <Plus className="h-4 w-4 mr-2" />
-              Assign Room
-            </Button>
-            <Button 
-              onClick={() => setViewMode(viewMode === 'floor' ? 'schedule' : 'floor')} 
-              variant="outline"
-            >
-              {viewMode === 'floor' ? 'View Weekly Schedule' : 'View Floor Plan'}
-            </Button>
+          <CardContent>
+            <Tabs defaultValue="availability" className="w-full" onValueChange={(value) => {
+              if (value === 'rooms') fetchRooms();
+            }}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="availability">Room Availability</TabsTrigger>
+                <TabsTrigger value="rooms">Manage Rooms</TabsTrigger>
+                <TabsTrigger value="schedule">Allocate Rooms</TabsTrigger>
+                <TabsTrigger value="batches">Batches</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="availability" className="space-y-4">
+                <FloorRoomGrid onRoomClick={handleRoomClick} isAdmin={true} />
+              </TabsContent>
+              
+              <TabsContent value="rooms" className="space-y-4">
+                <div className="flex justify-end">
+                  <Button onClick={() => setIsAddRoomOpen(true)}>Add Room</Button>
+                </div>
+                <RoomGrid rooms={rooms} onFreeRoom={handleFreeRoom} isAdmin={true} />
+                <AddRoomDialog 
+                  open={isAddRoomOpen} 
+                  onOpenChange={setIsAddRoomOpen}
+                  onSuccess={fetchRooms}
+                />
+              </TabsContent>
+              
+              <TabsContent value="schedule" className="space-y-4">
+                <WeeklySchedule />
+              </TabsContent>
+
+              <TabsContent value="batches" className="space-y-4">
+                <BatchManagement />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
-        {viewMode === 'floor' ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Floor Selector</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={selectedFloor.toString()} onValueChange={(v) => setSelectedFloor(parseInt(v))}>
-                <TabsList className="grid grid-cols-8 w-full">
-                  <TabsTrigger value="0">Ground</TabsTrigger>
-                  <TabsTrigger value="1">1st</TabsTrigger>
-                  <TabsTrigger value="2">2nd</TabsTrigger>
-                  <TabsTrigger value="3">3rd</TabsTrigger>
-                  <TabsTrigger value="4">4th</TabsTrigger>
-                  <TabsTrigger value="5">5th</TabsTrigger>
-                  <TabsTrigger value="6">6th</TabsTrigger>
-                  <TabsTrigger value="7">7th</TabsTrigger>
-                </TabsList>
-                <TabsContent value={selectedFloor.toString()} className="mt-6">
-                  {loadingRooms ? (
-                    <div className="text-center py-8">Loading rooms...</div>
-                  ) : (
-                    <RoomGrid rooms={rooms} onFreeRoom={handleFreeRoom} isAdmin={true} />
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Weekly Schedule & Room Allocation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <WeeklySchedule />
-            </CardContent>
-          </Card>
-        )}
+        <RoomTimelineDialog
+          room={selectedRoom}
+          day={selectedDay}
+          open={timelineOpen}
+          onOpenChange={setTimelineOpen}
+        />
       </div>
-
-      <AddRoomDialog open={isAddRoomOpen} onOpenChange={setIsAddRoomOpen} onSuccess={fetchRooms} />
-      <AssignRoomDialog open={isAssignRoomOpen} onOpenChange={setIsAssignRoomOpen} onSuccess={fetchRooms} />
     </div>
   );
 };
