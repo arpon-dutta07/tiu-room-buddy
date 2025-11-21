@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -84,6 +84,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       toast.error(error.message);
       throw error;
+    }
+
+    // Fetch role immediately after sign in
+    if (data.user) {
+      const role = await fetchUserRole(data.user.id);
+      setUserRole(role);
     }
 
     toast.success('Signed in successfully');
