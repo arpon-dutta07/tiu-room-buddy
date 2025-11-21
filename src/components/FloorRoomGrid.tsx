@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { QuickAllocateDialog } from './QuickAllocateDialog';
 
 interface Room {
   id: string;
@@ -51,6 +52,8 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
   const [selectedFloor, setSelectedFloor] = useState(0);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);
+  const [allocateDialogOpen, setAllocateDialogOpen] = useState(false);
+  const [selectedRoomForAllocation, setSelectedRoomForAllocation] = useState<Room | null>(null);
 
   useEffect(() => {
     fetchRoomAvailability();
@@ -205,7 +208,14 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                 <Button
                   key={room.id}
                   variant="outline"
-                  onClick={() => onRoomClick(room)}
+                  onClick={() => {
+                    if (isAdmin) {
+                      setSelectedRoomForAllocation(room);
+                      setAllocateDialogOpen(true);
+                    } else {
+                      onRoomClick(room);
+                    }
+                  }}
                   className={cn(
                     'h-24 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105',
                     room.isOccupied
@@ -217,12 +227,28 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                   <span className="text-xs">
                     {room.isOccupied ? 'Occupied' : 'Free'}
                   </span>
+                  {room.isOccupied && room.subject && (
+                    <span className="text-xs font-semibold truncate w-full px-1">
+                      {room.subject}
+                    </span>
+                  )}
                 </Button>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {isAdmin && selectedRoomForAllocation && (
+        <QuickAllocateDialog
+          open={allocateDialogOpen}
+          onOpenChange={setAllocateDialogOpen}
+          room={selectedRoomForAllocation}
+          day={selectedDay}
+          timeSlot={selectedTimeSlot}
+          onSuccess={fetchRoomAvailability}
+        />
+      )}
     </div>
   );
 };
