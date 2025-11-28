@@ -13,6 +13,7 @@ import AddRoomDialog from '@/components/AddRoomDialog';
 import { FloorRoomGrid } from '@/components/FloorRoomGrid';
 import { RoomTimelineDialog } from '@/components/RoomTimelineDialog';
 import { BatchManagement } from '@/components/BatchManagement';
+import { BulkRoutineUpload } from '@/components/BulkRoutineUpload';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const AdminDashboard = () => {
@@ -100,11 +101,12 @@ const AdminDashboard = () => {
             <Tabs defaultValue="availability" className="w-full" onValueChange={(value) => {
               if (value === 'rooms') fetchRooms();
             }}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="availability">Room Availability</TabsTrigger>
                 <TabsTrigger value="rooms">Manage Rooms</TabsTrigger>
                 <TabsTrigger value="schedule">Allocate Rooms</TabsTrigger>
                 <TabsTrigger value="batches">Batches</TabsTrigger>
+                <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
               </TabsList>
               
               <TabsContent value="availability" className="space-y-4">
@@ -129,6 +131,10 @@ const AdminDashboard = () => {
 
               <TabsContent value="batches" className="space-y-4">
                 <BatchManagement />
+              </TabsContent>
+
+              <TabsContent value="bulk-upload" className="space-y-4">
+                <BulkRoutineUpload />
               </TabsContent>
             </Tabs>
           </CardContent>
