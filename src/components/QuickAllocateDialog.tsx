@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AlertTriangle } from 'lucide-react';
 
 interface QuickAllocateDialogProps {
   open: boolean;
@@ -14,6 +16,12 @@ interface QuickAllocateDialogProps {
   day: number;
   timeSlot: { id: number; label: string; start: string; end: string };
   onSuccess: () => void;
+}
+
+interface Conflict {
+  type: 'teacher' | 'batch';
+  message: string;
+  room: string;
 }
 
 export const QuickAllocateDialog = ({
@@ -32,13 +40,23 @@ export const QuickAllocateDialog = ({
   const [teacherName, setTeacherName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [existingRoutine, setExistingRoutine] = useState<any>(null);
+  const [conflicts, setConflicts] = useState<Conflict[]>([]);
+  const [isCheckingConflicts, setIsCheckingConflicts] = useState(false);
 
   useEffect(() => {
     if (open) {
       fetchBatches();
       fetchExistingRoutine();
+      setConflicts([]);
     }
   }, [open, room, day, timeSlot]);
+
+  // Check for conflicts when batch or teacher changes
+  useEffect(() => {
+    if (open && (selectedBatch || teacherName)) {
+      checkConflicts();
+    }
+  }, [selectedBatch, teacherName, selectedStream]);
 
   const fetchBatches = async () => {
     const { data, error } = await supabase
@@ -86,8 +104,81 @@ export const QuickAllocateDialog = ({
     }
   };
 
+  const checkConflicts = async () => {
+    if (!selectedBatch && !teacherName.trim()) {
+      setConflicts([]);
+      return;
+    }
+
+    setIsCheckingConflicts(true);
+    const newConflicts: Conflict[] = [];
+
+    try {
+      // Check batch conflict
+      if (selectedBatch && selectedStream) {
+        const { data: batchConflicts } = await supabase
+          .from('routines')
+          .select('*, rooms:allocated_room_id(room_number)')
+          .eq('stream', selectedStream)
+          .eq('batch', selectedBatch)
+          .eq('day_of_week', day)
+          .not('allocated_room_id', 'is', null)
+          .neq('allocated_room_id', room?.id || '')
+          .gte('end_time', timeSlot.start)
+          .lte('start_time', timeSlot.end);
+
+        if (batchConflicts && batchConflicts.length > 0) {
+          const conflict = batchConflicts[0];
+          const roomNum = (conflict.rooms as any)?.room_number || 'another room';
+          newConflicts.push({
+            type: 'batch',
+            message: `${selectedStream} ${selectedBatch} is already scheduled for "${conflict.subject}" in Room ${roomNum}`,
+            room: roomNum,
+          });
+        }
+      }
+
+      // Check teacher conflict
+      if (teacherName.trim()) {
+        const { data: teacherConflicts } = await supabase
+          .from('routines')
+          .select('*, rooms:allocated_room_id(room_number)')
+          .ilike('teacher_name', teacherName.trim())
+          .eq('day_of_week', day)
+          .not('allocated_room_id', 'is', null)
+          .neq('allocated_room_id', room?.id || '')
+          .gte('end_time', timeSlot.start)
+          .lte('start_time', timeSlot.end);
+
+        if (teacherConflicts && teacherConflicts.length > 0) {
+          const conflict = teacherConflicts[0];
+          const roomNum = (conflict.rooms as any)?.room_number || 'another room';
+          newConflicts.push({
+            type: 'teacher',
+            message: `${teacherName} is already teaching "${conflict.subject}" to ${conflict.stream} ${conflict.batch} in Room ${roomNum}`,
+            room: roomNum,
+          });
+        }
+      }
+
+      setConflicts(newConflicts);
+    } catch (error) {
+      console.error('Error checking conflicts:', error);
+    } finally {
+      setIsCheckingConflicts(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (conflicts.length > 0) {
+      const proceed = window.confirm(
+        `Warning: There are scheduling conflicts:\n\n${conflicts.map(c => `• ${c.message}`).join('\n')}\n\nDo you want to proceed anyway?`
+      );
+      if (!proceed) return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -191,6 +282,7 @@ export const QuickAllocateDialog = ({
     setSelectedStream('');
     setSelectedBatch('');
     setExistingRoutine(null);
+    setConflicts([]);
   };
 
   const filteredBatches = batches.filter((b) => b.stream === selectedStream);
@@ -208,6 +300,20 @@ export const QuickAllocateDialog = ({
             Time: {timeSlot?.label}
           </p>
         </DialogHeader>
+
+        {conflicts.length > 0 && (
+          <div className="space-y-2">
+            {conflicts.map((conflict, index) => (
+              <Alert key={index} variant="destructive" className="py-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-sm ml-2">
+                  <strong>{conflict.type === 'teacher' ? 'Teacher' : 'Batch'} Conflict:</strong>{' '}
+                  {conflict.message}
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -267,11 +373,19 @@ export const QuickAllocateDialog = ({
               onChange={(e) => setTeacherName(e.target.value)}
               required
             />
+            {isCheckingConflicts && (
+              <p className="text-xs text-muted-foreground">Checking for conflicts...</p>
+            )}
           </div>
 
           <div className="flex gap-2">
-            <Button type="submit" className="flex-1" disabled={isLoading}>
-              {isLoading ? 'Processing...' : existingRoutine ? 'Update' : 'Allocate'}
+            <Button 
+              type="submit" 
+              className="flex-1" 
+              disabled={isLoading}
+              variant={conflicts.length > 0 ? 'destructive' : 'default'}
+            >
+              {isLoading ? 'Processing...' : conflicts.length > 0 ? 'Allocate Anyway' : existingRoutine ? 'Update' : 'Allocate'}
             </Button>
             {existingRoutine && (
               <Button
