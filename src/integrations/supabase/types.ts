@@ -14,169 +14,16 @@ export type Database = {
   }
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          full_name: string
-          id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          full_name?: string
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      rooms: {
-        Row: {
-          allocated_to: string | null
-          batch: string | null
-          created_at: string
-          floor_number: number
-          id: string
-          occupied_from: string | null
-          occupied_till: string | null
-          room_number: string
-          room_type: Database["public"]["Enums"]["room_type"]
-          status: Database["public"]["Enums"]["room_status"]
-          subject: string | null
-          teacher_name: string | null
-          updated_at: string
-        }
-        Insert: {
-          allocated_to?: string | null
-          batch?: string | null
-          created_at?: string
-          floor_number: number
-          id?: string
-          occupied_from?: string | null
-          occupied_till?: string | null
-          room_number: string
-          room_type?: Database["public"]["Enums"]["room_type"]
-          status?: Database["public"]["Enums"]["room_status"]
-          subject?: string | null
-          teacher_name?: string | null
-          updated_at?: string
-        }
-        Update: {
-          allocated_to?: string | null
-          batch?: string | null
-          created_at?: string
-          floor_number?: number
-          id?: string
-          occupied_from?: string | null
-          occupied_till?: string | null
-          room_number?: string
-          room_type?: Database["public"]["Enums"]["room_type"]
-          status?: Database["public"]["Enums"]["room_status"]
-          subject?: string | null
-          teacher_name?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      routines: {
-        Row: {
-          allocated_room_id: string | null
-          batch: string
-          created_at: string
-          day_of_week: number
-          default_room: string | null
-          end_time: string
-          id: string
-          start_time: string
-          stream: string
-          subject: string
-          teacher_name: string
-          updated_at: string
-        }
-        Insert: {
-          allocated_room_id?: string | null
-          batch: string
-          created_at?: string
-          day_of_week: number
-          default_room?: string | null
-          end_time: string
-          id?: string
-          start_time: string
-          stream: string
-          subject: string
-          teacher_name: string
-          updated_at?: string
-        }
-        Update: {
-          allocated_room_id?: string | null
-          batch?: string
-          created_at?: string
-          day_of_week?: number
-          default_room?: string | null
-          end_time?: string
-          id?: string
-          start_time?: string
-          stream?: string
-          subject?: string
-          teacher_name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "routines_allocated_room_id_fkey"
-            columns: ["allocated_room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "student" | "teacher"
-      room_status: "free" | "occupied"
-      room_type: "classroom" | "lab" | "conference"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -303,10 +150,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "student", "teacher"],
-      room_status: ["free", "occupied"],
-      room_type: ["classroom", "lab", "conference"],
-    },
+    Enums: {},
   },
 } as const
