@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Papa from "papaparse";
 import { Upload, Download, CheckCircle, XCircle } from "lucide-react";
 
 interface RoutineRow {
-  batch: string;
-  stream: string;
   day: string;
   start_time: string;
   end_time: string;
@@ -23,6 +23,12 @@ interface RoutineRow {
 interface ValidationError {
   row: number;
   errors: string[];
+}
+
+interface Batch {
+  id: string;
+  batch_name: string;
+  stream: string;
 }
 
 const dayMap: { [key: string]: number } = {
@@ -39,19 +45,37 @@ export function BulkRoutineUpload() {
   const [parsedData, setParsedData] = useState<RoutineRow[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    fetchBatches();
+  }, []);
+
+  const fetchBatches = async () => {
+    const { data, error } = await supabase
+      .from("batches")
+      .select("*")
+      .order("stream")
+      .order("batch_name");
+
+    if (!error && data) {
+      setBatches(data);
+    }
+  };
+
   const downloadTemplate = () => {
-    const template = `batch,stream,day,start_time,end_time,subject,teacher,default_room
-AI4B,B.Tech,Monday,09:00,10:00,Machine Learning,Dr. Smith,101
-AI4B,B.Tech,Monday,10:00,11:00,Data Structures,Prof. Johnson,102
-BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
+    const template = `day,start_time,end_time,subject,teacher,default_room
+Monday,09:00,10:00,Machine Learning,Dr. Smith,101
+Monday,10:00,11:00,Data Structures,Prof. Johnson,102
+Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
     
     const blob = new Blob([template], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "timetable_template.csv";
+    a.download = `timetable_template${selectedBatch ? `_${selectedBatch.batch_name}` : ""}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -63,8 +87,6 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
   const validateRow = (row: RoutineRow, index: number): string[] => {
     const errors: string[] = [];
 
-    if (!row.batch?.trim()) errors.push("Batch is required");
-    if (!row.stream?.trim()) errors.push("Stream is required");
     if (!row.day?.trim()) errors.push("Day is required");
     else if (!dayMap[row.day.toLowerCase()]) {
       errors.push("Day must be Monday-Saturday");
@@ -142,6 +164,15 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
   };
 
   const uploadRoutines = async () => {
+    if (!selectedBatch) {
+      toast({
+        title: "No batch selected",
+        description: "Please select a batch first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (validationErrors.length > 0) {
       toast({
         title: "Cannot upload",
@@ -155,8 +186,8 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
 
     try {
       const routinesToInsert = parsedData.map((row) => ({
-        batch: row.batch.trim(),
-        stream: row.stream.trim(),
+        batch: selectedBatch.batch_name,
+        stream: selectedBatch.stream,
         day_of_week: dayMap[row.day.toLowerCase()],
         start_time: row.start_time.trim(),
         end_time: row.end_time.trim(),
@@ -171,7 +202,7 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
 
       toast({
         title: "Upload successful",
-        description: `${routinesToInsert.length} routines uploaded`,
+        description: `${routinesToInsert.length} routines uploaded for ${selectedBatch.batch_name}`,
       });
 
       setFile(null);
@@ -188,15 +219,57 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
     }
   };
 
+  // Group batches by stream
+  const batchesByStream = batches.reduce((acc, batch) => {
+    if (!acc[batch.stream]) acc[batch.stream] = [];
+    acc[batch.stream].push(batch);
+    return acc;
+  }, {} as Record<string, Batch[]>);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Bulk Routine Upload</CardTitle>
         <CardDescription>
-          Upload weekly timetables for multiple batches using CSV format
+          Select a batch and upload its weekly timetable using CSV format
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Batch Selection */}
+        <div className="space-y-2">
+          <Label>Select Batch</Label>
+          <Select
+            value={selectedBatch?.id || ""}
+            onValueChange={(value) => {
+              const batch = batches.find((b) => b.id === value);
+              setSelectedBatch(batch || null);
+            }}
+          >
+            <SelectTrigger className="w-full md:w-80">
+              <SelectValue placeholder="Choose a batch to upload timetable" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(batchesByStream).map(([stream, streamBatches]) => (
+                <div key={stream}>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted">
+                    {stream}
+                  </div>
+                  {streamBatches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>
+                      {batch.batch_name}
+                    </SelectItem>
+                  ))}
+                </div>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedBatch && (
+            <p className="text-sm text-muted-foreground">
+              Uploading timetable for: <span className="font-medium">{selectedBatch.batch_name}</span> ({selectedBatch.stream})
+            </p>
+          )}
+        </div>
+
         <div className="flex gap-4">
           <Button onClick={downloadTemplate} variant="outline">
             <Download className="mr-2 h-4 w-4" />
@@ -207,10 +280,18 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
               type="file"
               accept=".csv"
               onChange={handleFileChange}
-              disabled={uploading}
+              disabled={uploading || !selectedBatch}
             />
           </div>
         </div>
+
+        {!selectedBatch && parsedData.length === 0 && (
+          <Alert>
+            <AlertDescription>
+              Please select a batch first before uploading the timetable CSV.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {validationErrors.length > 0 && (
           <Alert variant="destructive">
@@ -249,7 +330,7 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
               </div>
               <Button
                 onClick={uploadRoutines}
-                disabled={uploading || validationErrors.length > 0}
+                disabled={uploading || validationErrors.length > 0 || !selectedBatch}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 {uploading ? "Uploading..." : "Upload Routines"}
@@ -261,8 +342,6 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>
-                    <TableHead>Batch</TableHead>
-                    <TableHead>Stream</TableHead>
                     <TableHead>Day</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Subject</TableHead>
@@ -279,8 +358,6 @@ BSc6B,B.Sc,Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
                         className={hasError ? "bg-destructive/10" : ""}
                       >
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell>{row.batch}</TableCell>
-                        <TableCell>{row.stream}</TableCell>
                         <TableCell>{row.day}</TableCell>
                         <TableCell>
                           {row.start_time} - {row.end_time}
