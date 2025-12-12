@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      batches: {
+        Row: {
+          batch_name: string
+          created_at: string
+          id: string
+          stream: string
+        }
+        Insert: {
+          batch_name: string
+          created_at?: string
+          id?: string
+          stream: string
+        }
+        Update: {
+          batch_name?: string
+          created_at?: string
+          id?: string
+          stream?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

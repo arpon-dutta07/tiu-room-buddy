@@ -23,7 +23,6 @@ export const BatchManagement = () => {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [newStream, setNewStream] = useState('');
   const [newBatch, setNewBatch] = useState('');
-  const [selectedStream, setSelectedStream] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -35,25 +34,27 @@ export const BatchManagement = () => {
     setLoading(true);
     
     const { data, error } = await supabase
-      .from('routines')
-      .select('stream, batch');
+      .from('batches')
+      .select('stream, batch_name')
+      .order('stream')
+      .order('batch_name');
 
     if (error) {
       toast.error('Failed to fetch batches');
       console.error(error);
     } else {
       // Group by stream
-      const grouped = data.reduce((acc: Record<string, Set<string>>, item) => {
+      const grouped = data.reduce((acc: Record<string, string[]>, item) => {
         if (!acc[item.stream]) {
-          acc[item.stream] = new Set();
+          acc[item.stream] = [];
         }
-        acc[item.stream].add(item.batch);
+        acc[item.stream].push(item.batch_name);
         return acc;
       }, {});
 
-      const batchList = Object.entries(grouped).map(([stream, batchSet]) => ({
+      const batchList = Object.entries(grouped).map(([stream, batchNames]) => ({
         stream,
-        batches: Array.from(batchSet),
+        batches: batchNames,
       }));
 
       setBatches(batchList);
@@ -62,33 +63,46 @@ export const BatchManagement = () => {
     setLoading(false);
   };
 
-  const handleAddStream = () => {
+  const handleAddBatch = async () => {
     if (!newStream.trim() || !newBatch.trim()) {
       toast.error('Please enter both stream and batch name');
       return;
     }
 
-    const existingStream = batches.find((b) => b.stream === newStream);
-    if (existingStream) {
-      if (existingStream.batches.includes(newBatch)) {
+    const { error } = await supabase
+      .from('batches')
+      .insert({ stream: newStream.trim(), batch_name: newBatch.trim() });
+
+    if (error) {
+      if (error.code === '23505') {
         toast.error('This batch already exists');
-        return;
+      } else {
+        toast.error('Failed to add batch');
       }
-      setBatches(
-        batches.map((b) =>
-          b.stream === newStream
-            ? { ...b, batches: [...b.batches, newBatch] }
-            : b
-        )
-      );
-    } else {
-      setBatches([...batches, { stream: newStream, batches: [newBatch] }]);
+      return;
     }
 
     toast.success(`Added ${newBatch} to ${newStream}`);
     setNewStream('');
     setNewBatch('');
     setDialogOpen(false);
+    fetchBatches();
+  };
+
+  const handleDeleteBatch = async (stream: string, batchName: string) => {
+    const { error } = await supabase
+      .from('batches')
+      .delete()
+      .eq('stream', stream)
+      .eq('batch_name', batchName);
+
+    if (error) {
+      toast.error('Failed to delete batch');
+      return;
+    }
+
+    toast.success(`Deleted ${batchName}`);
+    fetchBatches();
   };
 
   return (
@@ -121,12 +135,12 @@ export const BatchManagement = () => {
                   <Label htmlFor="batch">Batch Name</Label>
                   <Input
                     id="batch"
-                    placeholder="e.g., AI4B, CSE1, BBA2"
+                    placeholder="e.g., CSE 1A, Physics 2A"
                     value={newBatch}
                     onChange={(e) => setNewBatch(e.target.value)}
                   />
                 </div>
-                <Button onClick={handleAddStream} className="w-full">
+                <Button onClick={handleAddBatch} className="w-full">
                   Add Batch
                 </Button>
               </div>
@@ -139,23 +153,29 @@ export const BatchManagement = () => {
           <div className="text-center py-8">Loading batches...</div>
         ) : batches.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            No batches found. Add some routines to see batches here.
+            No batches found. Add some to get started.
           </div>
         ) : (
           <div className="space-y-4">
             {batches.map((batch) => (
               <Card key={batch.stream}>
-                <CardHeader>
+                <CardHeader className="py-3">
                   <CardTitle className="text-lg">{batch.stream}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <div className="flex flex-wrap gap-2">
                     {batch.batches.map((b) => (
                       <div
                         key={b}
-                        className="px-3 py-1 bg-primary/10 text-primary rounded-md text-sm font-medium"
+                        className="group flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-md text-sm font-medium"
                       >
                         {b}
+                        <button
+                          onClick={() => handleDeleteBatch(batch.stream, b)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
                       </div>
                     ))}
                   </div>
