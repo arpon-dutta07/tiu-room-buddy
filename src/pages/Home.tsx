@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, UserCog, GraduationCap } from 'lucide-react';
+import campusBg from '@/assets/tiu-campus.jpg';
 
 const Home = () => {
   const { user, userRole, loading } = useAuth();
@@ -28,8 +29,17 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl space-y-8">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `url(${campusBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+      <div className="w-full max-w-4xl space-y-8 relative z-10">
         <div className="text-center space-y-4">
           <div className="flex justify-center mb-6">
             <div className="bg-primary/10 p-6 rounded-full">
