@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -235,38 +236,54 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Batch Selection */}
-        <div className="space-y-2">
+        {/* Batch Selection - Grouped by Stream */}
+        <div className="space-y-3">
           <Label>Select Batch</Label>
-          <Select
-            value={selectedBatch?.id || ""}
-            onValueChange={(value) => {
-              const batch = batches.find((b) => b.id === value);
-              setSelectedBatch(batch || null);
-            }}
-          >
-            <SelectTrigger className="w-full md:w-80">
-              <SelectValue placeholder="Choose a batch to upload timetable" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(batchesByStream).map(([stream, streamBatches]) => (
-                <div key={stream}>
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted">
-                    {stream}
-                  </div>
-                  {streamBatches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.id}>
-                      {batch.batch_name}
-                    </SelectItem>
-                  ))}
-                </div>
-              ))}
-            </SelectContent>
-          </Select>
           {selectedBatch && (
-            <p className="text-sm text-muted-foreground">
-              Uploading timetable for: <span className="font-medium">{selectedBatch.batch_name}</span> ({selectedBatch.stream})
-            </p>
+            <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+              <Badge variant="secondary">{selectedBatch.stream}</Badge>
+              <span className="font-semibold">{selectedBatch.batch_name}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto h-7 text-xs"
+                onClick={() => setSelectedBatch(null)}
+              >
+                Change
+              </Button>
+            </div>
+          )}
+          
+          {!selectedBatch && (
+            <Accordion type="single" collapsible className="border rounded-lg">
+              {Object.entries(batchesByStream).map(([stream, streamBatches]) => (
+                <AccordionItem key={stream} value={stream}>
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{stream}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {streamBatches.length} batches
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {streamBatches.map((batch) => (
+                        <Button
+                          key={batch.id}
+                          variant="outline"
+                          size="sm"
+                          className="justify-start h-9"
+                          onClick={() => setSelectedBatch(batch)}
+                        >
+                          {batch.batch_name}
+                        </Button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           )}
         </div>
 
