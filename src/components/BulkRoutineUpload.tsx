@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Papa from "papaparse";
-import { Upload, Download, CheckCircle, XCircle, FileText, X } from "lucide-react";
+import { Upload, Download, CheckCircle, XCircle, FileText, X, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface RoutineRow {
   day: string;
@@ -46,10 +47,17 @@ export function BulkRoutineUpload() {
   const [parsedData, setParsedData] = useState<RoutineRow[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   const handleDragOver = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -71,6 +79,7 @@ export function BulkRoutineUpload() {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && droppedFile.name.endsWith('.csv')) {
       setFile(droppedFile);
+      setParsing(true);
       parseCSV(droppedFile);
     } else {
       toast({
@@ -152,6 +161,7 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
     }
 
     setFile(selectedFile);
+    setParsing(true);
     parseCSV(selectedFile);
   };
 
@@ -172,6 +182,7 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
         });
 
         setValidationErrors(errors);
+        setParsing(false);
 
         if (errors.length === 0) {
           toast({
@@ -187,6 +198,7 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
         }
       },
       error: (error) => {
+        setParsing(false);
         toast({
           title: "Parse error",
           description: error.message,
@@ -351,23 +363,40 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
                   />
                 </label>
               ) : (
-                <div className="flex-1 flex items-center justify-between gap-3 px-4 py-3 border rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3 border rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      {parsing ? (
+                        <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                      ) : (
+                        <FileText className="h-5 w-5 text-primary" />
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
+                        <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        setFile(null);
+                        setParsedData([]);
+                        setParsing(false);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      disabled={parsing}
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setFile(null);
-                      setParsedData([]);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
-                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  {parsing && (
+                    <div className="px-1">
+                      <Progress value={undefined} className="h-1" />
+                      <p className="text-xs text-muted-foreground mt-1">Processing CSV...</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
