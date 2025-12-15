@@ -287,20 +287,22 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
           )}
         </div>
 
-        <div className="flex gap-4">
-          <Button onClick={downloadTemplate} variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Download Template
-          </Button>
-          <div className="flex-1">
-            <Input
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              disabled={uploading || !selectedBatch}
-            />
+        {selectedBatch && (
+          <div className="flex gap-4">
+            <Button onClick={downloadTemplate} variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Download Template
+            </Button>
+            <div className="flex-1">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                disabled={uploading}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {!selectedBatch && parsedData.length === 0 && (
           <Alert>
