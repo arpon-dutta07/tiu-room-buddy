@@ -288,19 +288,22 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
         </div>
 
         {selectedBatch && (
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <Button onClick={downloadTemplate} variant="outline">
               <Download className="mr-2 h-4 w-4" />
               Download Template
             </Button>
-            <div className="flex-1">
+            <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Click to upload CSV</span>
               <Input
                 type="file"
                 accept=".csv"
                 onChange={handleFileChange}
                 disabled={uploading}
+                className="hidden"
               />
-            </div>
+            </label>
           </div>
         )}
 
