@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,38 @@ export function BulkRoutineUpload() {
   const [uploading, setUploading] = useState(false);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile && droppedFile.name.endsWith('.csv')) {
+      setFile(droppedFile);
+      parseCSV(droppedFile);
+    } else {
+      toast({
+        title: "Invalid file",
+        description: "Please upload a CSV file",
+        variant: "destructive",
+      });
+    }
+  };
   const { toast } = useToast();
 
   useEffect(() => {
@@ -293,10 +325,22 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
               <Download className="mr-2 h-4 w-4" />
               Download Template
             </Button>
-            <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
-              <Upload className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Click to upload CSV</span>
+            <label 
+              className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                isDragging 
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-muted-foreground/30 bg-muted/30 hover:bg-muted/50 hover:border-primary/50'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Upload className={`h-6 w-6 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className={`text-sm ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
+                {isDragging ? 'Drop CSV file here' : 'Drag & drop or click to upload CSV'}
+              </span>
               <Input
+                ref={fileInputRef}
                 type="file"
                 accept=".csv"
                 onChange={handleFileChange}
