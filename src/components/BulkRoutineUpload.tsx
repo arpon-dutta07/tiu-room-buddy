@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Papa from "papaparse";
-import { Upload, Download, CheckCircle, XCircle } from "lucide-react";
+import { Upload, Download, CheckCircle, XCircle, FileText, X } from "lucide-react";
 
 interface RoutineRow {
   day: string;
@@ -320,34 +320,57 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
         </div>
 
         {selectedBatch && (
-          <div className="flex gap-4 items-center">
-            <Button onClick={downloadTemplate} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Download Template
-            </Button>
-            <label 
-              className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
-                isDragging 
-                  ? 'border-primary bg-primary/10' 
-                  : 'border-muted-foreground/30 bg-muted/30 hover:bg-muted/50 hover:border-primary/50'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <Upload className={`h-6 w-6 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
-              <span className={`text-sm ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
-                {isDragging ? 'Drop CSV file here' : 'Drag & drop or click to upload CSV'}
-              </span>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4 items-center">
+              <Button onClick={downloadTemplate} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Download Template
+              </Button>
+              {!file ? (
+                <label 
+                  className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                    isDragging 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-muted-foreground/30 bg-muted/30 hover:bg-muted/50 hover:border-primary/50'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <Upload className={`h-6 w-6 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className={`text-sm ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {isDragging ? 'Drop CSV file here' : 'Drag & drop or click to upload CSV'}
+                  </span>
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
+              ) : (
+                <div className="flex-1 flex items-center justify-between gap-3 px-4 py-3 border rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setFile(null);
+                      setParsedData([]);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
