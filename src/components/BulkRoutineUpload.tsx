@@ -33,6 +33,13 @@ interface Batch {
   stream: string;
 }
 
+interface FileWithStatus {
+  file: File;
+  status: 'pending' | 'parsing' | 'success' | 'error';
+  data?: RoutineRow[];
+  errors?: ValidationError[];
+}
+
 const dayMap: { [key: string]: number } = {
   monday: 1,
   tuesday: 2,
@@ -43,15 +50,14 @@ const dayMap: { [key: string]: number } = {
 };
 
 export function BulkRoutineUpload() {
-  const [file, setFile] = useState<File | null>(null);
-  const [parsedData, setParsedData] = useState<RoutineRow[]>([]);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [files, setFiles] = useState<FileWithStatus[]>([]);
+  const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [parsing, setParsing] = useState(false);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
@@ -76,20 +82,101 @@ export function BulkRoutineUpload() {
     e.stopPropagation();
     setIsDragging(false);
     
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.name.endsWith('.csv')) {
-      setFile(droppedFile);
-      setParsing(true);
-      parseCSV(droppedFile);
+    const droppedFiles = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.csv'));
+    if (droppedFiles.length > 0) {
+      addFiles(droppedFiles);
     } else {
       toast({
-        title: "Invalid file",
-        description: "Please upload a CSV file",
+        title: "Invalid files",
+        description: "Please upload CSV files",
         variant: "destructive",
       });
     }
   };
-  const { toast } = useToast();
+
+  const addFiles = (newFiles: File[]) => {
+    const newFileStatuses: FileWithStatus[] = newFiles.map(f => ({
+      file: f,
+      status: 'pending' as const
+    }));
+    
+    setFiles(prev => {
+      const updated = [...prev, ...newFileStatuses];
+      // Start processing queue
+      processNextFile(updated, prev.length);
+      return updated;
+    });
+  };
+
+  const processNextFile = (fileList: FileWithStatus[], startIndex: number) => {
+    const nextPending = fileList.findIndex((f, i) => i >= startIndex && f.status === 'pending');
+    if (nextPending !== -1) {
+      parseFileAtIndex(nextPending, fileList);
+    }
+  };
+
+  const parseFileAtIndex = (index: number, currentFiles: FileWithStatus[]) => {
+    const fileItem = currentFiles[index];
+    if (!fileItem) return;
+
+    // Update status to parsing
+    setFiles(prev => prev.map((f, i) => i === index ? { ...f, status: 'parsing' as const } : f));
+
+    Papa.parse(fileItem.file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const data = results.data as RoutineRow[];
+        const errors: ValidationError[] = [];
+        
+        data.forEach((row, rowIndex) => {
+          const rowErrors = validateRow(row);
+          if (rowErrors.length > 0) {
+            errors.push({ row: rowIndex + 1, errors: rowErrors });
+          }
+        });
+
+        setFiles(prev => {
+          const updated = prev.map((f, i) => {
+            if (i === index) {
+              return {
+                ...f,
+                status: (errors.length === 0 ? 'success' : 'error') as 'success' | 'error',
+                data,
+                errors
+              };
+            }
+            return f;
+          });
+          
+          // Process next file in queue
+          setTimeout(() => processNextFile(updated, index + 1), 100);
+          return updated;
+        });
+
+        if (errors.length === 0) {
+          toast({
+            title: `${fileItem.file.name} parsed`,
+            description: `${data.length} routines ready`,
+          });
+        }
+      },
+      error: (error) => {
+        setFiles(prev => {
+          const updated = prev.map((f, i) => 
+            i === index ? { ...f, status: 'error' as const, errors: [{ row: 0, errors: [error.message] }] } : f
+          );
+          setTimeout(() => processNextFile(updated, index + 1), 100);
+          return updated;
+        });
+        toast({
+          title: "Parse error",
+          description: `${fileItem.file.name}: ${error.message}`,
+          variant: "destructive",
+        });
+      },
+    });
+  };
 
   useEffect(() => {
     fetchBatches();
@@ -126,7 +213,7 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
     return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
   };
 
-  const validateRow = (row: RoutineRow, index: number): string[] => {
+  const validateRow = (row: RoutineRow): string[] => {
     const errors: string[] = [];
 
     if (!row.day?.trim()) errors.push("Day is required");
@@ -148,65 +235,40 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    if (!selectedFile.name.endsWith(".csv")) {
+    const selectedFiles = Array.from(e.target.files || []);
+    const csvFiles = selectedFiles.filter(f => f.name.endsWith(".csv"));
+    
+    if (csvFiles.length === 0) {
       toast({
-        title: "Invalid file",
-        description: "Please upload a CSV file",
+        title: "Invalid files",
+        description: "Please upload CSV files",
         variant: "destructive",
       });
       return;
     }
 
-    setFile(selectedFile);
-    setParsing(true);
-    parseCSV(selectedFile);
+    addFiles(csvFiles);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const parseCSV = (file: File) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const data = results.data as RoutineRow[];
-        setParsedData(data);
-
-        const errors: ValidationError[] = [];
-        data.forEach((row, index) => {
-          const rowErrors = validateRow(row, index);
-          if (rowErrors.length > 0) {
-            errors.push({ row: index + 1, errors: rowErrors });
-          }
-        });
-
-        setValidationErrors(errors);
-        setParsing(false);
-
-        if (errors.length === 0) {
-          toast({
-            title: "CSV parsed successfully",
-            description: `${data.length} routines ready to upload`,
-          });
-        } else {
-          toast({
-            title: "Validation errors found",
-            description: `${errors.length} rows have errors`,
-            variant: "destructive",
-          });
-        }
-      },
-      error: (error) => {
-        setParsing(false);
-        toast({
-          title: "Parse error",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    });
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    if (selectedFileIndex === index) {
+      setSelectedFileIndex(null);
+    } else if (selectedFileIndex !== null && selectedFileIndex > index) {
+      setSelectedFileIndex(selectedFileIndex - 1);
+    }
   };
+
+  const clearAllFiles = () => {
+    setFiles([]);
+    setSelectedFileIndex(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const selectedFile = selectedFileIndex !== null ? files[selectedFileIndex] : null;
+  const parsedData = selectedFile?.data || [];
+  const validationErrors = selectedFile?.errors || [];
 
   const uploadRoutines = async () => {
     if (!selectedBatch) {
@@ -250,9 +312,9 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
         description: `${routinesToInsert.length} routines uploaded for ${selectedBatch.batch_name}`,
       });
 
-      setFile(null);
-      setParsedData([]);
-      setValidationErrors([]);
+      if (selectedFileIndex !== null) {
+        removeFile(selectedFileIndex);
+      }
     } catch (error: any) {
       toast({
         title: "Upload failed",
@@ -270,6 +332,8 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
     acc[batch.stream].push(batch);
     return acc;
   }, {} as Record<string, Batch[]>);
+
+  const isProcessing = files.some(f => f.status === 'parsing');
 
   return (
     <Card>
@@ -333,14 +397,15 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
 
         {selectedBatch && (
           <div className="flex flex-col gap-4">
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-start">
               <Button onClick={downloadTemplate} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Download Template
               </Button>
-              {!file ? (
+              <div className="flex-1 flex flex-col gap-3">
+                {/* Upload Area */}
                 <label 
-                  className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                  className={`flex flex-col items-center justify-center gap-2 px-4 py-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
                     isDragging 
                       ? 'border-primary bg-primary/10' 
                       : 'border-muted-foreground/30 bg-muted/30 hover:bg-muted/50 hover:border-primary/50'
@@ -351,59 +416,95 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
                 >
                   <Upload className={`h-6 w-6 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
                   <span className={`text-sm ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {isDragging ? 'Drop CSV file here' : 'Drag & drop or click to upload CSV'}
+                    {isDragging ? 'Drop CSV files here' : 'Drag & drop or click to upload CSV files'}
                   </span>
+                  <span className="text-xs text-muted-foreground">Multiple files supported</span>
                   <Input
                     ref={fileInputRef}
                     type="file"
                     accept=".csv"
+                    multiple
                     onChange={handleFileChange}
                     disabled={uploading}
                     className="hidden"
                   />
                 </label>
-              ) : (
-                <div className="flex-1 flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-3 px-4 py-3 border rounded-lg bg-muted/30">
-                    <div className="flex items-center gap-2">
-                      {parsing ? (
-                        <Loader2 className="h-5 w-5 text-primary animate-spin" />
-                      ) : (
-                        <FileText className="h-5 w-5 text-primary" />
-                      )}
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
-                        <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
+
+                {/* File Queue */}
+                {files.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{files.length} file{files.length > 1 ? 's' : ''}</span>
+                      <Button variant="ghost" size="sm" onClick={clearAllFiles} className="h-7 text-xs">
+                        Clear all
+                      </Button>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {files.map((fileItem, index) => (
+                        <div 
+                          key={`${fileItem.file.name}-${index}`}
+                          className={`flex items-center justify-between gap-3 px-3 py-2 border rounded-lg transition-colors cursor-pointer ${
+                            selectedFileIndex === index 
+                              ? 'bg-primary/10 border-primary/30' 
+                              : 'bg-muted/30 hover:bg-muted/50'
+                          }`}
+                          onClick={() => fileItem.status !== 'parsing' && setSelectedFileIndex(index)}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {fileItem.status === 'parsing' && (
+                              <Loader2 className="h-4 w-4 text-primary animate-spin flex-shrink-0" />
+                            )}
+                            {fileItem.status === 'success' && (
+                              <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            )}
+                            {fileItem.status === 'error' && (
+                              <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                            )}
+                            {fileItem.status === 'pending' && (
+                              <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium truncate">{fileItem.file.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatFileSize(fileItem.file.size)}
+                                {fileItem.status === 'success' && fileItem.data && (
+                                  <span className="text-green-600 ml-2">• {fileItem.data.length} rows</span>
+                                )}
+                                {fileItem.status === 'error' && fileItem.errors && (
+                                  <span className="text-destructive ml-2">• {fileItem.errors.length} errors</span>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(index);
+                            }}
+                            disabled={fileItem.status === 'parsing'}
+                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    {isProcessing && (
+                      <div className="px-1">
+                        <Progress value={undefined} className="h-1" />
+                        <p className="text-xs text-muted-foreground mt-1">Processing files...</p>
                       </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        setFile(null);
-                        setParsedData([]);
-                        setParsing(false);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      disabled={parsing}
-                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    )}
                   </div>
-                  {parsing && (
-                    <div className="px-1">
-                      <Progress value={undefined} className="h-1" />
-                      <p className="text-xs text-muted-foreground mt-1">Processing CSV...</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
 
-        {!selectedBatch && parsedData.length === 0 && (
+        {!selectedBatch && files.length === 0 && (
           <Alert>
             <AlertDescription>
               Please select a batch first before uploading the timetable CSV.
@@ -411,10 +512,10 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
           </Alert>
         )}
 
-        {validationErrors.length > 0 && (
+        {validationErrors.length > 0 && selectedFile && (
           <Alert variant="destructive">
             <AlertDescription>
-              <div className="font-semibold mb-2">Validation Errors:</div>
+              <div className="font-semibold mb-2">Validation Errors in {selectedFile.file.name}:</div>
               <ul className="list-disc list-inside space-y-1">
                 {validationErrors.map((error) => (
                   <li key={error.row}>
@@ -426,7 +527,7 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
           </Alert>
         )}
 
-        {parsedData.length > 0 && (
+        {parsedData.length > 0 && selectedFile && (
           <>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -434,7 +535,7 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
                   <>
                     <CheckCircle className="h-5 w-5 text-green-600" />
                     <span className="text-sm text-green-600">
-                      All {parsedData.length} rows valid
+                      All {parsedData.length} rows valid in {selectedFile.file.name}
                     </span>
                   </>
                 ) : (
