@@ -56,6 +56,8 @@ export function BulkRoutineUpload() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -266,6 +268,45 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleQueueDragStart = (index: number) => {
+    setDragIndex(index);
+  };
+
+  const handleQueueDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleQueueDrop = (index: number) => {
+    if (dragIndex === null || dragIndex === index) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    setFiles(prev => {
+      const updated = [...prev];
+      const [moved] = updated.splice(dragIndex, 1);
+      updated.splice(index, 0, moved);
+      return updated;
+    });
+    if (selectedFileIndex !== null) {
+      if (selectedFileIndex === dragIndex) {
+        setSelectedFileIndex(index);
+      } else if (dragIndex < selectedFileIndex && index >= selectedFileIndex) {
+        setSelectedFileIndex(selectedFileIndex - 1);
+      } else if (dragIndex > selectedFileIndex && index <= selectedFileIndex) {
+        setSelectedFileIndex(selectedFileIndex + 1);
+      }
+    }
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleQueueDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
   const selectedFile = selectedFileIndex !== null ? files[selectedFileIndex] : null;
   const parsedData = selectedFile?.data || [];
   const validationErrors = selectedFile?.errors || [];
@@ -443,11 +484,18 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
                       {files.map((fileItem, index) => (
                         <div 
                           key={`${fileItem.file.name}-${index}`}
-                          className={`flex items-center justify-between gap-3 px-3 py-2 border rounded-lg transition-colors cursor-pointer ${
-                            selectedFileIndex === index 
-                              ? 'bg-primary/10 border-primary/30' 
-                              : 'bg-muted/30 hover:bg-muted/50'
-                          }`}
+                          draggable={fileItem.status !== 'parsing'}
+                          onDragStart={() => handleQueueDragStart(index)}
+                          onDragOver={(e) => handleQueueDragOver(e, index)}
+                          onDrop={() => handleQueueDrop(index)}
+                          onDragEnd={handleQueueDragEnd}
+                          className={`flex items-center justify-between gap-3 px-3 py-2 border rounded-lg transition-all cursor-grab active:cursor-grabbing ${
+                            dragOverIndex === index && dragIndex !== index
+                              ? 'border-primary bg-primary/15 scale-[1.02]'
+                              : selectedFileIndex === index 
+                                ? 'bg-primary/10 border-primary/30' 
+                                : 'bg-muted/30 hover:bg-muted/50'
+                          } ${dragIndex === index ? 'opacity-40' : ''}`}
                           onClick={() => fileItem.status !== 'parsing' && setSelectedFileIndex(index)}
                         >
                           <div className="flex items-center gap-2 min-w-0">
