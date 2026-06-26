@@ -44,6 +44,7 @@ const FLOORS = [
   { value: 4, label: '4th Floor' },
   { value: 5, label: '5th Floor' },
   { value: 6, label: '6th Floor' },
+  { value: 7, label: '7th Floor' },
 ];
 
 export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridProps) => {

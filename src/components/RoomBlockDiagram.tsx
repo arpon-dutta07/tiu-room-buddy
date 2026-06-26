@@ -23,6 +23,7 @@ const FLOORS = [
   { value: 4, label: '4th Floor' },
   { value: 5, label: '5th Floor' },
   { value: 6, label: '6th Floor' },
+  { value: 7, label: '7th Floor' },
 ];
 
 export const RoomBlockDiagram = () => {
@@ -129,20 +130,22 @@ export const RoomBlockDiagram = () => {
                     {floorRooms.map((room) => (
                       <div
                         key={room.id}
-                        className={`relative group px-4 py-2 rounded-lg border-2 transition-all hover:shadow-md ${getRoomTypeColor(room.room_type)}`}
+                        className={`flex items-center justify-between gap-3 pl-4 pr-2 py-1.5 rounded-lg border-2 transition-all hover:shadow-sm ${getRoomTypeColor(room.room_type)}`}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{room.room_number}</span>
-                          <span className="text-xs text-muted-foreground capitalize">
-                            ({room.room_type})
+                        <div className="flex flex-col justify-center">
+                          <span className="font-semibold text-sm">{room.room_number}</span>
+                          <span className="text-[10px] text-muted-foreground capitalize leading-tight">
+                            {room.room_type}
                           </span>
                         </div>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDeleteRoom(room.id, room.room_number)}
-                          className="absolute -top-2 -right-2 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors"
                         >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     ))}
                   </div>
