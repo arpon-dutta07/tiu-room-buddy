@@ -9,11 +9,13 @@ import { RoomTimelineDialog } from '@/components/RoomTimelineDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const StudentDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [selectedDay, setSelectedDay] = useState(1);
   const [timelineOpen, setTimelineOpen] = useState(false);
+
+  const isTeacher = userRole === 'teacher';
 
   const handleSignOut = async () => {
     await signOut();
@@ -30,8 +32,12 @@ const StudentDashboard = () => {
       <div className="container mx-auto p-4 md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
-            <p className="text-muted-foreground">Techno India University - View Room Availability</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              {isTeacher ? 'Teacher Dashboard' : 'Student Dashboard'}
+            </h1>
+            <p className="text-muted-foreground">
+              Techno India University - {isTeacher ? 'Manage Room Bookings' : 'View Room Availability'}
+            </p>
           </div>
           <div className="flex gap-2">
             <ThemeToggle />
@@ -44,16 +50,18 @@ const StudentDashboard = () => {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Welcome, {user?.email}</CardTitle>
+            <CardTitle>Welcome, {isTeacher ? 'Teacher' : 'Student'} ({user?.email})</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Select a day, time slot, and floor to view room availability. Click any room to see its full day schedule.
+              {isTeacher 
+                ? 'Select a day, time slot, and floor to check room bookings. Click any room status button to allocate a free room or release your reservation.'
+                : 'Select a day, time slot, and floor to view room availability. Click any room to see its full day schedule.'}
             </p>
           </CardContent>
         </Card>
 
-        <FloorRoomGrid onRoomClick={handleRoomClick} isAdmin={false} />
+        <FloorRoomGrid onRoomClick={handleRoomClick} isAdmin={isTeacher} />
 
         <RoomTimelineDialog
           room={selectedRoom}

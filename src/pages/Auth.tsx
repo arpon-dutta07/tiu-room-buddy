@@ -21,7 +21,7 @@ const Auth = () => {
     if (!loading && user && userRole) {
       if (userRole === 'admin') {
         navigate('/admin');
-      } else if (userRole === 'student') {
+      } else if (userRole === 'student' || userRole === 'teacher') {
         navigate('/student');
       }
     }

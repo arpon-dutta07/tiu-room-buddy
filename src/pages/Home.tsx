@@ -14,7 +14,7 @@ const Home = () => {
     if (!loading && user && userRole) {
       if (userRole === 'admin') {
         navigate('/admin');
-      } else if (userRole === 'student') {
+      } else if (userRole === 'student' || userRole === 'teacher') {
         navigate('/student');
       }
     }
@@ -55,26 +55,33 @@ const Home = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/auth')}>
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="bg-primary/10 p-3 rounded-lg">
                   <UserCog className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>Admin Login</CardTitle>
-                  <CardDescription>Manage rooms and assignments</CardDescription>
+                  <CardTitle>Staff & Faculty Login</CardTitle>
+                  <CardDescription>Manage rooms, schedules, and bookings</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>• View all 7 floors (G, 1-7)</li>
-                <li>• Assign rooms to teachers</li>
-                <li>• Manage schedules and routines</li>
+                <li>• Manage schedules & upload routines (Admins)</li>
+                <li>• Book or release free rooms (Teachers)</li>
                 <li>• Free up rooms manually</li>
               </ul>
-              <Button className="w-full mt-4">Login as Admin</Button>
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button className="flex-1" onClick={() => navigate('/auth')}>
+                  Login as Admin
+                </Button>
+                <Button variant="outline" className="flex-1 border-primary/20 text-primary hover:bg-primary/5" onClick={() => navigate('/auth')}>
+                  Login as Teacher
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
