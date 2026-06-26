@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Eye, EyeOff } from 'lucide-react';
+// No select component needed anymore since role is contextual
 
 const Auth = () => {
+  const [searchParams] = useSearchParams();
+  const queryRole = searchParams.get('role');
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +25,9 @@ const Auth = () => {
     if (!loading && user && userRole) {
       if (userRole === 'admin') {
         navigate('/admin');
-      } else if (userRole === 'student' || userRole === 'teacher') {
+      } else if (userRole === 'teacher') {
+        navigate('/teacher');
+      } else if (userRole === 'student') {
         navigate('/student');
       }
     }
@@ -35,7 +41,8 @@ const Auth = () => {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        await signUp(email, password, fullName);
+        const resolvedRole = (queryRole === 'admin' ? 'admin' : queryRole === 'teacher' ? 'teacher' : 'student') as 'admin' | 'student' | 'teacher';
+        await signUp(email, password, fullName, resolvedRole);
       }
     } catch (error) {
       console.error('Auth error:', error);

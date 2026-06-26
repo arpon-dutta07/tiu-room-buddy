@@ -210,10 +210,14 @@ class MockSupabaseQueryBuilder {
 
 // Seed Mock Database if empty
 const seedMockDatabase = () => {
-  if (localStorage.getItem('mock_db_seeded')) return;
+  const seeded = localStorage.getItem('mock_db_seeded');
+  const mockUsersStr = localStorage.getItem('mock_users');
+  const hasNewAdmin = mockUsersStr && mockUsersStr.includes('admin@tiuroom.com');
+
+  if (seeded && hasNewAdmin) return;
 
   const mockUsers = [
-    { id: 'usr-admin-1', email: 'admin@gmail.com', password: 'admin123', full_name: 'Admin User', role: 'admin' },
+    { id: 'usr-admin-1', email: 'admin@tiuroom.com', password: 'Admin@TiuRoom!2026', full_name: 'Admin User', role: 'admin' },
     { id: 'usr-stud-1', email: 'student@gmail.com', password: 'student123', full_name: 'Student User', role: 'student' },
     { id: 'usr-teach-1', email: 'teacher@gmail.com', password: 'teacher123', full_name: 'Teacher User', role: 'teacher' },
   ];
@@ -349,18 +353,29 @@ const mockAuth = {
     const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
     const user = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
 
+    if (user && user.password !== password) {
+      return { data: null, error: { message: 'Invalid email or password' } };
+    }
+
     // For demo convenience, if they enter a mock user, we sign them in.
     // If user is not found, we create a student user automatically so they don't get stuck!
     let sessionUser = user;
     if (!sessionUser) {
-      // Create user on the fly as a student so they can log in with any credentials!
+      // Create user on the fly as a student, teacher, or admin so they can log in with any credentials!
+      let role = 'student';
+      if (email.toLowerCase().includes('admin')) {
+        role = 'admin';
+      } else if (email.toLowerCase().includes('teacher')) {
+        role = 'teacher';
+      }
+      
       const newUserId = 'usr-' + crypto.randomUUID();
       const newUser = {
         id: newUserId,
         email: email,
         password: password,
         full_name: email.split('@')[0],
-        role: email.toLowerCase().includes('admin') ? 'admin' : 'student'
+        role: role
       };
       
       users.push(newUser);
@@ -403,8 +418,15 @@ const mockAuth = {
     }
 
     const newUserId = 'usr-' + crypto.randomUUID();
-    // Default role: if email contains admin, make it admin. Otherwise student.
-    const role = email.toLowerCase().includes('admin') ? 'admin' : 'student';
+    
+    // Determine role based on option data
+    const requestedRole = options?.data?.role;
+    let role = 'student';
+    if (requestedRole === 'admin') {
+      role = 'admin';
+    } else if (requestedRole === 'teacher') {
+      role = 'teacher';
+    }
 
     const newUser = {
       id: newUserId,

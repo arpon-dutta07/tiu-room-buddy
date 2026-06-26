@@ -14,7 +14,9 @@ const Home = () => {
     if (!loading && user && userRole) {
       if (userRole === 'admin') {
         navigate('/admin');
-      } else if (userRole === 'student' || userRole === 'teacher') {
+      } else if (userRole === 'teacher') {
+        navigate('/teacher');
+      } else if (userRole === 'student') {
         navigate('/student');
       }
     }
@@ -75,17 +77,17 @@ const Home = () => {
                 <li>• Free up rooms manually</li>
               </ul>
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Button className="flex-1" onClick={() => navigate('/auth')}>
+                <Button className="flex-1" onClick={() => navigate('/auth?role=admin')}>
                   Login as Admin
                 </Button>
-                <Button variant="outline" className="flex-1 border-primary/20 text-primary hover:bg-primary/5" onClick={() => navigate('/auth')}>
+                <Button variant="outline" className="flex-1 border-primary/20 text-primary hover:bg-primary/5" onClick={() => navigate('/auth?role=teacher')}>
                   Login as Teacher
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/auth')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/auth?role=student')}>
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="bg-secondary/10 p-3 rounded-lg">
