@@ -333,16 +333,36 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
     setUploading(true);
 
     try {
-      const routinesToInsert = parsedData.map((row) => ({
-        batch: selectedBatch.batch_name,
-        stream: selectedBatch.stream,
-        day_of_week: dayMap[row.day.toLowerCase()],
-        start_time: row.start_time.trim(),
-        end_time: row.end_time.trim(),
-        subject: row.subject.trim(),
-        teacher_name: row.teacher.trim(),
-        default_room: row.default_room?.trim() || null,
-      }));
+      // Fetch rooms to map room numbers to UUIDs for foreign key reference
+      const { data: roomsData, error: roomsError } = await supabase
+        .from("rooms")
+        .select("id, room_number");
+
+      if (roomsError) throw roomsError;
+
+      const roomMap: Record<string, string> = {};
+      roomsData?.forEach((r) => {
+        if (r.room_number) {
+          roomMap[r.room_number.trim().toLowerCase()] = r.id;
+        }
+      });
+
+      const routinesToInsert = parsedData.map((row) => {
+        const defaultRoomStr = row.default_room?.trim() || "";
+        const roomId = roomMap[defaultRoomStr.toLowerCase()] || null;
+
+        return {
+          batch: selectedBatch.batch_name,
+          stream: selectedBatch.stream,
+          day_of_week: dayMap[row.day.toLowerCase()],
+          start_time: row.start_time.trim(),
+          end_time: row.end_time.trim(),
+          subject: row.subject.trim(),
+          teacher_name: row.teacher.trim(),
+          default_room: defaultRoomStr || null,
+          allocated_room_id: roomId,
+        };
+      });
 
       const { error } = await supabase.from("routines").insert(routinesToInsert);
 
