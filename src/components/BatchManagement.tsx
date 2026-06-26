@@ -90,6 +90,8 @@ export const BatchManagement = () => {
   };
 
   const handleDeleteBatch = async (stream: string, batchName: string) => {
+    if (!confirm(`Are you sure you want to delete batch "${batchName}"?`)) return;
+
     const { error } = await supabase
       .from('batches')
       .delete()
@@ -103,6 +105,22 @@ export const BatchManagement = () => {
 
     toast.success(`Deleted ${batchName}`);
     fetchBatches();
+  };
+
+  const getBatchColorClasses = (batchName: string) => {
+    if (batchName.includes('1')) {
+      return 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20';
+    }
+    if (batchName.includes('2')) {
+      return 'bg-green-500/10 text-green-700 dark:text-green-300 border border-green-500/20';
+    }
+    if (batchName.includes('3')) {
+      return 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20';
+    }
+    if (batchName.includes('4')) {
+      return 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20';
+    }
+    return 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20';
   };
 
   return (
@@ -157,6 +175,12 @@ export const BatchManagement = () => {
           </div>
         ) : (
           <div className="space-y-4">
+            <div className="flex flex-wrap gap-4 mb-4 text-xs">
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-500/20 border border-blue-500/20"></span><span>1st Year</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-green-500/20 border border-green-500/20"></span><span>2nd Year</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/20"></span><span>3rd Year</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500/20"></span><span>4th Year</span></div>
+            </div>
             {batches.map((batch) => (
               <Card key={batch.stream}>
                 <CardHeader className="py-3">
@@ -167,14 +191,15 @@ export const BatchManagement = () => {
                     {batch.batches.map((b) => (
                       <div
                         key={b}
-                        className="group flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-md text-sm font-medium"
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium transition-all ${getBatchColorClasses(b)}`}
                       >
-                        {b}
+                        <span>{b}</span>
                         <button
                           onClick={() => handleDeleteBatch(batch.stream, b)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:text-destructive"
+                          className="hover:text-destructive text-muted-foreground/60 transition-colors"
+                          title={`Delete ${b}`}
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     ))}
