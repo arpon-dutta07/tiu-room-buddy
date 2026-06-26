@@ -51,75 +51,105 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
   const [selectedDay, setSelectedDay] = useState(1); // Monday
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(TIME_SLOTS[0]);
   const [selectedFloor, setSelectedFloor] = useState(0);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  
+  // Day-wide data lists
+  const [allRooms, setAllRooms] = useState<any[]>([]);
+  const [allRoutines, setAllRoutines] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  
   const [allocateDialogOpen, setAllocateDialogOpen] = useState(false);
   const [selectedRoomForAllocation, setSelectedRoomForAllocation] = useState<Room | null>(null);
 
-  useEffect(() => {
-    fetchRoomAvailability();
-  }, [selectedDay, selectedTimeSlot, selectedFloor]);
-
-  const fetchRoomAvailability = async () => {
+  const fetchDayData = async () => {
     setLoading(true);
-    
-    // Fetch all rooms on the selected floor
-    const { data: roomsData, error: roomsError } = await supabase
-      .from('rooms')
-      .select('*')
-      .eq('floor_number', selectedFloor)
-      .order('room_number');
+    try {
+      const { data: roomsData, error: roomsError } = await supabase
+        .from('rooms')
+        .select('*')
+        .order('room_number');
 
-    if (roomsError) {
-      toast.error('Failed to fetch rooms');
-      console.error(roomsError);
+      if (roomsError) throw roomsError;
+
+      const { data: routinesData, error: routinesError } = await supabase
+        .from('routines')
+        .select('*')
+        .eq('day_of_week', selectedDay);
+
+      if (routinesError) throw routinesError;
+
+      setAllRooms(roomsData || []);
+      setAllRoutines(routinesData || []);
+    } catch (err) {
+      toast.error('Failed to load room availability');
+      console.error(err);
+    } finally {
       setLoading(false);
-      return;
     }
+  };
 
-    // Fetch all routines for the selected day and time slot
-    const { data: routinesData, error: routinesError } = await supabase
-      .from('routines')
-      .select('*, rooms(room_number)')
-      .eq('day_of_week', selectedDay)
-      .gte('end_time', selectedTimeSlot.start)
-      .lte('start_time', selectedTimeSlot.end);
+  useEffect(() => {
+    fetchDayData();
+  }, [selectedDay]);
 
-    if (routinesError) {
-      toast.error('Failed to fetch schedules');
-      console.error(routinesError);
-      setLoading(false);
-      return;
-    }
+  const timeToMinutes = (timeStr: string) => {
+    if (!timeStr) return 0;
+    const parts = timeStr.split(':');
+    const hours = parseInt(parts[0], 10) || 0;
+    const minutes = parseInt(parts[1], 10) || 0;
+    return hours * 60 + minutes;
+  };
 
-    // Map rooms with their occupation status
-    const roomsWithStatus = roomsData.map((room) => {
-      const occupyingRoutine = routinesData?.find((routine) => routine.allocated_room_id === room.id);
-      
+  const checkRoutineOverlap = (routine: any, slot: any) => {
+    const rStart = timeToMinutes(routine.start_time);
+    const rEnd = timeToMinutes(routine.end_time);
+    const slotStart = timeToMinutes(slot.start);
+    const slotEnd = timeToMinutes(slot.end);
+    return rStart < slotEnd && rEnd > slotStart;
+  };
+
+  const getFloorSlotStats = (floorNum: number, slot: any) => {
+    const floorRooms = allRooms.filter((r) => r.floor_number === floorNum);
+    const total = floorRooms.length;
+    if (total === 0) return { total: 0, occupied: 0, free: 0 };
+
+    let occupied = 0;
+    floorRooms.forEach((room) => {
+      const isOccupied = allRoutines.some(
+        (routine) => routine.allocated_room_id === room.id && checkRoutineOverlap(routine, slot)
+      );
+      if (isOccupied) occupied++;
+    });
+
+    return { total, occupied, free: total - occupied };
+  };
+
+  const getRoomsWithAvailability = () => {
+    const floorRooms = allRooms.filter((r) => r.floor_number === selectedFloor);
+    return floorRooms.map((room) => {
+      const occupyingRoutine = allRoutines.find(
+        (routine) => routine.allocated_room_id === room.id && checkRoutineOverlap(routine, selectedTimeSlot)
+      );
+
       return {
         ...room,
         isOccupied: !!occupyingRoutine,
-        allocated_to: occupyingRoutine?.stream + ' - ' + occupyingRoutine?.batch || null,
+        allocated_to: occupyingRoutine ? `${occupyingRoutine.stream} - ${occupyingRoutine.batch}` : null,
         subject: occupyingRoutine?.subject || null,
         batch: occupyingRoutine?.batch || null,
         teacher_name: occupyingRoutine?.teacher_name || null,
       };
     });
-
-    setRooms(roomsWithStatus);
-    setLoading(false);
   };
+
+  const roomsToRender = getRoomsWithAvailability();
 
   return (
     <div className="space-y-6">
+      {/* Day Selector */}
       <Card>
-        <CardHeader>
-          <CardTitle>Room Availability</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Day Selection */}
+        <CardContent className="p-4 space-y-3">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Select Day</label>
+            <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Select Day</label>
             <div className="flex gap-2 flex-wrap">
               {DAYS.map((day, index) => (
                 <Button
@@ -127,85 +157,129 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                   variant={selectedDay === index + 1 ? 'default' : 'outline'}
                   onClick={() => setSelectedDay(index + 1)}
                   size="sm"
+                  className="px-4 py-2 font-medium"
                 >
                   {day}
                 </Button>
               ))}
             </div>
           </div>
-
-          {/* Time Slot Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Time Slot</label>
-            <Select
-              value={selectedTimeSlot.id.toString()}
-              onValueChange={(value) => {
-                const slot = TIME_SLOTS.find((s) => s.id.toString() === value);
-                if (slot) setSelectedTimeSlot(slot);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TIME_SLOTS.map((slot) => (
-                  <SelectItem key={slot.id} value={slot.id.toString()}>
-                    {slot.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Floor Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Floor</label>
-            <Select
-              value={selectedFloor.toString()}
-              onValueChange={(value) => setSelectedFloor(parseInt(value))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FLOORS.map((floor) => (
-                  <SelectItem key={floor.value} value={floor.value.toString()}>
-                    {floor.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </CardContent>
       </Card>
 
-      {/* Room Grid */}
+      {/* Floor & Time Availability Matrix */}
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg">Master Availability Matrix ({DAYS[selectedDay - 1]})</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Click on any cell to view detailed room status below. Colors represent floor occupancies.
+          </p>
+        </CardHeader>
+        <CardContent className="p-4">
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground animate-pulse">Loading availability grid...</div>
+          ) : allRooms.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">No rooms defined in system. Please add rooms.</div>
+          ) : (
+            <div className="overflow-x-auto border rounded-lg">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-muted/50 border-b">
+                    <th className="p-3 text-left font-semibold sticky left-0 bg-background border-r min-w-[120px]">Floor</th>
+                    {TIME_SLOTS.map((slot) => (
+                      <th key={slot.id} className="p-3 text-center font-semibold min-w-[95px]">{slot.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {FLOORS.map((floor) => (
+                    <tr key={floor.value} className="border-b last:border-0 hover:bg-muted/20">
+                      <td className="p-3 font-medium sticky left-0 bg-background border-r font-semibold">
+                        {floor.label}
+                      </td>
+                      {TIME_SLOTS.map((slot) => {
+                        const stats = getFloorSlotStats(floor.value, slot);
+                        const isSelected = selectedFloor === floor.value && selectedTimeSlot.id === slot.id;
+                        
+                        let colorClass = 'bg-muted/40 text-muted-foreground border-transparent cursor-not-allowed';
+                        if (stats.total > 0) {
+                          if (stats.occupied === 0) {
+                            colorClass = isSelected
+                              ? 'bg-green-500/25 text-green-900 dark:text-green-300 ring-2 ring-primary border-primary scale-[1.03] font-bold shadow'
+                              : 'bg-green-500/10 hover:bg-green-500/15 text-green-700 dark:text-green-400 border border-green-500/20 hover:scale-[1.02]';
+                          } else if (stats.free === 0) {
+                            colorClass = isSelected
+                              ? 'bg-red-500/25 text-red-900 dark:text-red-300 ring-2 ring-primary border-primary scale-[1.03] font-bold shadow'
+                              : 'bg-red-500/10 hover:bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/20 hover:scale-[1.02]';
+                          } else {
+                            colorClass = isSelected
+                              ? 'bg-amber-500/25 text-amber-900 dark:text-amber-300 ring-2 ring-primary border-primary scale-[1.03] font-bold shadow'
+                              : 'bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:scale-[1.02]';
+                          }
+                        }
+
+                        return (
+                          <td key={slot.id} className="p-2 text-center">
+                            {stats.total > 0 ? (
+                              <button
+                                onClick={() => {
+                                  setSelectedFloor(floor.value);
+                                  setSelectedTimeSlot(slot);
+                                }}
+                                className={cn(
+                                  "w-full px-2 py-1.5 rounded text-xs font-semibold transition-all duration-150 select-none",
+                                  colorClass
+                                )}
+                              >
+                                {stats.free}/{stats.total} Free
+                              </button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/50">-</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Room Detail Grid */}
       <Card>
-        <CardHeader>
-          <CardTitle>
-            {FLOORS.find((f) => f.value === selectedFloor)?.label} - {DAYS[selectedDay - 1]} - {selectedTimeSlot.label}
-          </CardTitle>
-          <div className="flex gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+          <div>
+            <CardTitle className="text-xl">
+              {FLOORS.find((f) => f.value === selectedFloor)?.label} — {selectedTimeSlot.label} ({DAYS[selectedDay - 1]})
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Rooms status for the selected matrix cell. Green is free, red is occupied.
+            </p>
+          </div>
+          <div className="flex gap-4 text-xs font-medium">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3.5 h-3.5 bg-green-500 rounded border border-green-600"></div>
               <span>Free</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded"></div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3.5 h-3.5 bg-red-500 rounded border border-red-600"></div>
               <span>Occupied</span>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {loading ? (
-            <div className="text-center py-8">Loading rooms...</div>
-          ) : rooms.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No rooms found on this floor
+            <div className="text-center py-12 text-muted-foreground">Loading room status...</div>
+          ) : roomsToRender.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
+              No rooms defined on this floor. Use the "Manage Rooms" tab to add some.
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-              {rooms.map((room) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {roomsToRender.map((room) => (
                 <Button
                   key={room.id}
                   variant="outline"
@@ -218,18 +292,18 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                     }
                   }}
                   className={cn(
-                    'h-24 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105',
+                    'h-24 flex flex-col items-center justify-center gap-1.5 transition-all duration-150 hover:scale-[1.03] border-2 shadow-sm font-semibold',
                     room.isOccupied
                       ? 'bg-red-500 hover:bg-red-600 text-white border-red-600'
                       : 'bg-green-500 hover:bg-green-600 text-white border-green-600'
                   )}
                 >
-                  <span className="text-lg font-bold">{room.room_number}</span>
-                  <span className="text-xs">
+                  <span className="text-lg font-bold leading-none">{room.room_number}</span>
+                  <span className="text-[10px] opacity-90 uppercase tracking-wider font-semibold">
                     {room.isOccupied ? 'Occupied' : 'Free'}
                   </span>
                   {room.isOccupied && room.subject && (
-                    <span className="text-xs font-semibold truncate w-full px-1">
+                    <span className="text-[11px] font-bold truncate w-full px-2 mt-0.5 leading-none">
                       {room.subject}
                     </span>
                   )}
@@ -247,7 +321,7 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
           room={selectedRoomForAllocation}
           day={selectedDay}
           timeSlot={selectedTimeSlot}
-          onSuccess={fetchRoomAvailability}
+          onSuccess={fetchDayData}
         />
       )}
     </div>
