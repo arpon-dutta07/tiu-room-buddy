@@ -38,11 +38,20 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      let resolvedRole: 'admin' | 'student' | 'teacher' | null = null;
       if (isLogin) {
-        await signIn(email, password);
+        resolvedRole = await signIn(email, password);
       } else {
-        const resolvedRole = (queryRole === 'admin' ? 'admin' : queryRole === 'teacher' ? 'teacher' : 'student') as 'admin' | 'student' | 'teacher';
-        await signUp(email, password, fullName, resolvedRole);
+        const roleParam = (queryRole === 'admin' ? 'admin' : queryRole === 'teacher' ? 'teacher' : 'student') as 'admin' | 'student' | 'teacher';
+        resolvedRole = await signUp(email, password, fullName, roleParam);
+      }
+      // Navigate immediately based on returned role
+      if (resolvedRole === 'admin') {
+        navigate('/admin');
+      } else if (resolvedRole === 'teacher') {
+        navigate('/teacher');
+      } else if (resolvedRole === 'student') {
+        navigate('/student');
       }
     } catch (error) {
       console.error('Auth error:', error);

@@ -49,10 +49,19 @@ const StudentDashboard = () => {
   };
 
   const expectedRole = isTeacherRoute ? 'teacher' : 'student';
-  if (loading || !user || userRole !== expectedRole) {
+  // Show loading only when auth state is not yet resolved
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse">Loading dashboard...</div>
+      </div>
+    );
+  }
+  // If role doesn't match, the useEffect will redirect — show spinner briefly
+  if (!userRole || userRole !== expectedRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse">Redirecting...</div>
       </div>
     );
   }

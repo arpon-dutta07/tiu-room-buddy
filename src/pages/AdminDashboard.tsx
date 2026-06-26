@@ -45,10 +45,17 @@ const AdminDashboard = () => {
     setTimelineOpen(true);
   };
 
-  if (loading || !user || userRole !== 'admin') {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse">Loading dashboard...</div>
+      </div>
+    );
+  }
+  if (!userRole || userRole !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse">Redirecting...</div>
       </div>
     );
   }
