@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,26 @@ import { BulkRoutineUpload } from '@/components/BulkRoutineUpload';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const AdminDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [selectedDay, setSelectedDay] = useState(1);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('availability');
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        navigate('/auth?role=admin');
+      } else if (userRole !== 'admin') {
+        if (userRole === 'teacher') {
+          navigate('/teacher');
+        } else {
+          navigate('/student');
+        }
+      }
+    }
+  }, [user, userRole, loading, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -30,6 +44,14 @@ const AdminDashboard = () => {
     setSelectedRoom(room);
     setTimelineOpen(true);
   };
+
+  if (loading || !user || userRole !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse">Loading dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">

@@ -1,21 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { FloorRoomGrid } from '@/components/FloorRoomGrid';
 import { RoomTimelineDialog } from '@/components/RoomTimelineDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const StudentDashboard = () => {
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [selectedDay, setSelectedDay] = useState(1);
   const [timelineOpen, setTimelineOpen] = useState(false);
 
+  const isTeacherRoute = location.pathname === '/teacher';
   const isTeacher = userRole === 'teacher';
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        navigate(isTeacherRoute ? '/auth?role=teacher' : '/auth?role=student');
+      } else {
+        const expectedRole = isTeacherRoute ? 'teacher' : 'student';
+        if (userRole !== expectedRole) {
+          if (userRole === 'admin') {
+            navigate('/admin');
+          } else if (userRole === 'teacher') {
+            navigate('/teacher');
+          } else if (userRole === 'student') {
+            navigate('/student');
+          }
+        }
+      }
+    }
+  }, [user, userRole, loading, navigate, isTeacherRoute]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -26,6 +47,15 @@ const StudentDashboard = () => {
     setSelectedRoom(room);
     setTimelineOpen(true);
   };
+
+  const expectedRole = isTeacherRoute ? 'teacher' : 'student';
+  if (loading || !user || userRole !== expectedRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse">Loading dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">

@@ -210,11 +210,16 @@ class MockSupabaseQueryBuilder {
 
 // Seed Mock Database if empty
 const seedMockDatabase = () => {
-  const seeded = localStorage.getItem('mock_db_seeded');
-  const mockUsersStr = localStorage.getItem('mock_users');
-  const hasNewAdmin = mockUsersStr && mockUsersStr.includes('admin@tiuroom.com');
+  if (localStorage.getItem('mock_db_seeded_v3')) return;
 
-  if (seeded && hasNewAdmin) return;
+  // Clear stale database keys to resolve any reversed roles from previous tests
+  localStorage.removeItem('mock_users');
+  localStorage.removeItem('mock_db_profiles');
+  localStorage.removeItem('mock_db_user_roles');
+  localStorage.removeItem('mock_db_rooms');
+  localStorage.removeItem('mock_db_batches');
+  localStorage.removeItem('mock_db_routines');
+  localStorage.removeItem('mock_session');
 
   const mockUsers = [
     { id: 'usr-admin-1', email: 'admin@tiuroom.com', password: 'Admin@TiuRoom!2026', full_name: 'Admin User', role: 'admin' },
@@ -336,7 +341,7 @@ const seedMockDatabase = () => {
   localStorage.setItem('mock_db_rooms', JSON.stringify(mockRooms));
   localStorage.setItem('mock_db_batches', JSON.stringify(mockBatches));
   localStorage.setItem('mock_db_routines', JSON.stringify(mockRoutines));
-  localStorage.setItem('mock_db_seeded', 'true');
+  localStorage.setItem('mock_db_seeded_v3', 'true');
 };
 
 // Initialize if mock mode is active
