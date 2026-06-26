@@ -19,6 +19,7 @@ const AdminDashboard = () => {
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [selectedDay, setSelectedDay] = useState(1);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('availability');
 
   const handleSignOut = async () => {
     await signOut();
@@ -53,7 +54,7 @@ const AdminDashboard = () => {
             <p className="text-sm text-muted-foreground">Logged in as: {user?.email}</p>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="availability" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="availability">Room Availability</TabsTrigger>
                 <TabsTrigger value="rooms">Manage Rooms</TabsTrigger>
@@ -63,23 +64,23 @@ const AdminDashboard = () => {
               </TabsList>
               
               <TabsContent value="availability" className="space-y-4">
-                <FloorRoomGrid onRoomClick={handleRoomClick} isAdmin={true} />
+                {activeTab === 'availability' && <FloorRoomGrid onRoomClick={handleRoomClick} isAdmin={true} />}
               </TabsContent>
               
               <TabsContent value="rooms" className="space-y-4">
-                <RoomBlockDiagram />
+                {activeTab === 'rooms' && <RoomBlockDiagram />}
               </TabsContent>
               
               <TabsContent value="schedule" className="space-y-4">
-                <WeeklySchedule />
+                {activeTab === 'schedule' && <WeeklySchedule />}
               </TabsContent>
 
               <TabsContent value="batches" className="space-y-4">
-                <BatchManagement />
+                {activeTab === 'batches' && <BatchManagement />}
               </TabsContent>
 
               <TabsContent value="bulk-upload" className="space-y-4">
-                <BulkRoutineUpload />
+                {activeTab === 'bulk-upload' && <BulkRoutineUpload />}
               </TabsContent>
             </Tabs>
           </CardContent>
