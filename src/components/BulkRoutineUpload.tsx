@@ -108,6 +108,9 @@ export function BulkRoutineUpload() {
       processNextFile(updated, prev.length);
       return updated;
     });
+
+    // Automatically select the first file in the queue to show the preview
+    setSelectedFileIndex(prev => prev !== null ? prev : 0);
   };
 
   const processNextFile = (fileList: FileWithStatus[], startIndex: number) => {
@@ -363,6 +366,15 @@ Tuesday,11:00,12:00,Physics Lab,Dr. Kumar,Lab-G1`;
           allocated_room_id: roomId,
         };
       });
+
+      // Wipe out all existing routines for the same batch first to overwrite
+      const { error: deleteError } = await supabase
+        .from("routines")
+        .delete()
+        .eq("stream", selectedBatch.stream)
+        .eq("batch", selectedBatch.batch_name);
+
+      if (deleteError) throw deleteError;
 
       const { error } = await supabase.from("routines").insert(routinesToInsert);
 
