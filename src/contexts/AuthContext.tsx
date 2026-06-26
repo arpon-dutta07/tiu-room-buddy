@@ -27,15 +27,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
-      .maybeSingle();
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error fetching user role:', error);
       return null;
     }
 
-    return data?.role as 'admin' | 'student' | 'teacher' | null;
+    if (!data || data.length === 0) return null;
+
+    // Prioritize roles: admin > teacher > student if multiple roles are present
+    const roles = data.map((r: any) => r.role);
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('teacher')) return 'teacher';
+    if (roles.includes('student')) return 'student';
+
+    return null;
   };
 
   useEffect(() => {
@@ -98,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -114,8 +121,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw error;
     }
 
-    toast.success('Account created successfully');
+    if (data?.session) {
+      toast.success('Account created and signed in successfully!');
+    } else {
+      toast.success('Account created! Please check your email for a verification link to log in.', {
+        duration: 8000,
+      });
+    }
   };
+
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
