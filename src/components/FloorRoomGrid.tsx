@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { QuickAllocateDialog } from './QuickAllocateDialog';
+import { TeacherBookRoomDialog } from './TeacherBookRoomDialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
 
 interface Room {
   id: string;
@@ -17,12 +19,44 @@ interface Room {
   subject?: string | null;
   batch?: string | null;
   teacher_name?: string | null;
+  isInstant?: boolean;
+  bookingExpiresAt?: string | null;
 }
 
 interface FloorRoomGridProps {
   onRoomClick: (room: Room) => void;
   isAdmin?: boolean;
 }
+
+const CountdownTimer = ({ expiresAt, onExpire }: { expiresAt: string; onExpire: () => void }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const diff = new Date(expiresAt).getTime() - new Date().getTime();
+      if (diff <= 0) {
+        onExpire();
+        return 'Expired';
+      }
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      return `${mins}m ${secs}s left`;
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt, onExpire]);
+
+  return (
+    <span className="text-[9px] font-mono font-bold tracking-tight text-amber-600 dark:text-amber-300 animate-pulse block mt-0.5">
+      ⚡ {timeLeft}
+    </span>
+  );
+};
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const TIME_SLOTS = [
@@ -58,10 +92,29 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
   
   const [allocateDialogOpen, setAllocateDialogOpen] = useState(false);
   const [selectedRoomForAllocation, setSelectedRoomForAllocation] = useState<Room | null>(null);
+  const [bookRoomDialogOpen, setBookRoomDialogOpen] = useState(false);
 
   const fetchDayData = async () => {
     setLoading(true);
     try {
+      // 1. Clean up expired special/instant special bookings before displaying
+      const now = new Date();
+      const { data: instantRoutines } = await supabase
+        .from('routines')
+        .select('*')
+        .eq('is_instant', true);
+
+      if (instantRoutines) {
+        for (const r of instantRoutines) {
+          if (r.booking_expires_at && new Date(r.booking_expires_at) < now) {
+            await supabase
+              .from('routines')
+              .update({ allocated_room_id: null, is_instant: false })
+              .eq('id', r.id);
+          }
+        }
+      }
+
       const { data: roomsData, error: roomsError } = await supabase
         .from('rooms')
         .select('*')
@@ -136,6 +189,8 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
         subject: occupyingRoutine?.subject || null,
         batch: occupyingRoutine?.batch || null,
         teacher_name: occupyingRoutine?.teacher_name || null,
+        isInstant: occupyingRoutine?.is_instant || false,
+        bookingExpiresAt: occupyingRoutine?.booking_expires_at || null,
       };
     });
   };
@@ -146,8 +201,8 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
     <div className="space-y-6">
       {/* Day Selector */}
       <Card className="bg-glass border-glass shadow-lg rounded-3xl relative overflow-hidden">
-        <CardContent className="p-4 space-y-3">
-          <div className="space-y-2">
+        <CardContent className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-2 flex-1 w-full">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Select Day</label>
             <div className="flex gap-1.5 p-1 bg-background/60 border border-glass rounded-2xl flex-wrap">
               {DAYS.map((day, index) => {
@@ -174,6 +229,15 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
               })}
             </div>
           </div>
+          {isAdmin && (
+            <Button 
+              onClick={() => setBookRoomDialogOpen(true)}
+              className="bg-primary hover:bg-primary/95 text-white font-semibold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl px-6 self-start md:self-center w-full md:w-auto mt-2 md:mt-0"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Book a Room
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -318,18 +382,27 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                   className={cn(
                     'h-24 flex flex-col items-center justify-center gap-1 transition-smooth border rounded-2xl shadow-sm font-semibold relative overflow-hidden',
                     room.isOccupied
-                      ? 'bg-rose-500/10 hover:bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20 hover:shadow-rose-500/5'
+                      ? room.isInstant
+                        ? 'bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-lg shadow-amber-500/5 animate-[pulse_1.8s_infinite]'
+                        : 'bg-rose-500/10 hover:bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20 hover:shadow-rose-500/5'
                       : 'bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:shadow-emerald-500/5'
                   )}
                 >
                   <span className="text-xl font-bold font-mono-data tracking-tight leading-none mb-1">{room.room_number}</span>
                   <span className={cn(
                     "text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full",
-                    room.isOccupied ? "bg-rose-500/20 text-rose-800 dark:text-rose-300" : "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
+                    room.isOccupied 
+                      ? room.isInstant
+                        ? "bg-amber-500/20 text-amber-800 dark:text-amber-300"
+                        : "bg-rose-500/20 text-rose-800 dark:text-rose-300"
+                      : "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
                   )}>
-                    {room.isOccupied ? 'Occupied' : 'Free'}
+                    {room.isOccupied ? room.isInstant ? 'Special' : 'Occupied' : 'Free'}
                   </span>
-                  {room.isOccupied && room.subject && (
+                  {room.isOccupied && room.isInstant && room.bookingExpiresAt && (
+                    <CountdownTimer expiresAt={room.bookingExpiresAt} onExpire={fetchDayData} />
+                  )}
+                  {room.isOccupied && !room.isInstant && room.subject && (
                     <span className="text-[10px] font-medium text-muted-foreground truncate w-full px-3 mt-1 text-center">
                       {room.subject}
                     </span>
@@ -349,6 +422,17 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
           day={selectedDay}
           timeSlot={selectedTimeSlot}
           onSuccess={fetchDayData}
+        />
+      )}
+
+      {isAdmin && (
+        <TeacherBookRoomDialog
+          open={bookRoomDialogOpen}
+          onOpenChange={setBookRoomDialogOpen}
+          onSuccess={fetchDayData}
+          defaultFloor={selectedFloor}
+          defaultDay={selectedDay}
+          defaultSlot={selectedTimeSlot.id.toString()}
         />
       )}
     </div>

@@ -42,6 +42,8 @@ export const QuickAllocateDialog = ({
   const [existingRoutine, setExistingRoutine] = useState<any>(null);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [isCheckingConflicts, setIsCheckingConflicts] = useState(false);
+  const [isInstant, setIsInstant] = useState(false);
+  const [instantDuration, setInstantDuration] = useState('30'); // default 30 mins
 
   useEffect(() => {
     if (open) {
@@ -101,6 +103,10 @@ export const QuickAllocateDialog = ({
       setTeacherName(data.teacher_name);
       setSelectedStream(data.stream);
       setSelectedBatch(data.batch);
+      setIsInstant(data.is_instant || false);
+      if (data.is_instant) {
+        setInstantDuration('30'); // fallback default
+      }
     }
   };
 
@@ -181,6 +187,25 @@ export const QuickAllocateDialog = ({
 
     setIsLoading(true);
 
+    // Calculate expiry timestamp if special instant booking is selected
+    let expiresAt: string | null = null;
+    if (isInstant) {
+      const now = new Date();
+      if (instantDuration === 'slot') {
+        const [hours, minutes] = timeSlot.end.split(':').map(Number);
+        const expiryDate = new Date();
+        expiryDate.setHours(hours, minutes, 0, 0);
+        if (expiryDate <= now) {
+          expiryDate.setDate(expiryDate.getDate() + 1);
+        }
+        expiresAt = expiryDate.toISOString();
+      } else {
+        const mins = parseInt(instantDuration, 10) || 30;
+        const expiryDate = new Date(now.getTime() + mins * 60000);
+        expiresAt = expiryDate.toISOString();
+      }
+    }
+
     try {
       if (existingRoutine) {
         // Update existing routine
@@ -191,6 +216,8 @@ export const QuickAllocateDialog = ({
             batch: selectedBatch,
             subject,
             teacher_name: teacherName,
+            is_instant: isInstant,
+            booking_expires_at: expiresAt,
           })
           .eq('id', existingRoutine.id);
 
@@ -218,6 +245,8 @@ export const QuickAllocateDialog = ({
             .update({
               allocated_room_id: room.id,
               teacher_name: teacherName,
+              is_instant: isInstant,
+              booking_expires_at: expiresAt,
             })
             .eq('id', existingData.id);
 
@@ -234,6 +263,8 @@ export const QuickAllocateDialog = ({
             start_time: timeSlot.start,
             end_time: timeSlot.end,
             allocated_room_id: room.id,
+            is_instant: isInstant,
+            booking_expires_at: expiresAt,
           });
 
           if (error) throw error;
@@ -283,6 +314,8 @@ export const QuickAllocateDialog = ({
     setSelectedBatch('');
     setExistingRoutine(null);
     setConflicts([]);
+    setIsInstant(false);
+    setInstantDuration('30');
   };
 
   const filteredBatches = batches.filter((b) => b.stream === selectedStream);
@@ -377,6 +410,38 @@ export const QuickAllocateDialog = ({
               <p className="text-xs text-muted-foreground">Checking for conflicts...</p>
             )}
           </div>
+
+          <div className="flex items-center space-x-2 bg-muted/20 p-3.5 border border-glass rounded-xl">
+            <input
+              type="checkbox"
+              id="is-instant"
+              checked={isInstant}
+              onChange={(e) => setIsInstant(e.target.checked)}
+              className="h-4 w-4 rounded border-glass text-primary focus:ring-primary bg-background/50 accent-primary"
+            />
+            <div className="flex-1">
+              <Label htmlFor="is-instant" className="font-bold cursor-pointer text-sm">Special Instant Booking</Label>
+              <p className="text-[10px] text-muted-foreground font-sans">Allot room instantly with automatic release timer.</p>
+            </div>
+          </div>
+
+          {isInstant && (
+            <div className="space-y-2 p-3.5 border border-glass rounded-xl bg-background/30">
+              <Label htmlFor="duration" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">Release Timer / Duration</Label>
+              <Select value={instantDuration} onValueChange={setInstantDuration}>
+                <SelectTrigger id="duration" className="bg-background/50 border-glass rounded-xl h-10">
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15 Minutes</SelectItem>
+                  <SelectItem value="30">30 Minutes</SelectItem>
+                  <SelectItem value="45">45 Minutes</SelectItem>
+                  <SelectItem value="60">60 Minutes</SelectItem>
+                  <SelectItem value="slot">Until end of slot ({timeSlot?.end})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex gap-2">
             <Button 

@@ -18,7 +18,7 @@ const StudentDashboard = () => {
   const [timelineOpen, setTimelineOpen] = useState(false);
 
   const isTeacherRoute = location.pathname === '/teacher';
-  const isTeacher = userRole === 'teacher';
+  const isTeacher = isTeacherRoute || userRole === 'teacher';
 
   useEffect(() => {
     if (!loading) {
@@ -68,7 +68,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative">
       <div className="container mx-auto p-4 md:p-8 relative z-10">
         {/* Header Block */}
         <motion.div 
