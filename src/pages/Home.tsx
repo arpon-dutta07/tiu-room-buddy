@@ -10,17 +10,6 @@ const Home = () => {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && user && userRole) {
-      if (userRole === 'admin') {
-        navigate('/admin');
-      } else if (userRole === 'teacher') {
-        navigate('/teacher');
-      } else if (userRole === 'student') {
-        navigate('/student');
-      }
-    }
-  }, [user, userRole, loading, navigate]);
 
   if (loading) {
     return (
