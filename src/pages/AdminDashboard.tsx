@@ -112,7 +112,7 @@ const AdminDashboard = () => {
             <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary" />
             
             <CardHeader className="border-b border-glass/60 bg-muted/10 pb-6">
-              <CardTitle className="text-2xl font-bold font-display">Welcome, Administrator</CardTitle>
+              <CardTitle className="text-2xl font-bold font-display">Welcome, {user?.user_metadata?.full_name || 'Administrator'}</CardTitle>
               <p className="text-sm text-muted-foreground font-mono">Logged in as: {user?.email}</p>
             </CardHeader>
             <CardContent className="pt-6">

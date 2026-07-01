@@ -118,7 +118,7 @@ const StudentDashboard = () => {
             
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-bold font-display">
-                Welcome, {isTeacher ? 'Faculty Member' : 'Student'}
+                Welcome, {user?.user_metadata?.full_name || (isTeacher ? 'Faculty Member' : 'Student')}
               </CardTitle>
               <p className="text-xs text-muted-foreground font-mono">Logged in as: {user?.email}</p>
             </CardHeader>

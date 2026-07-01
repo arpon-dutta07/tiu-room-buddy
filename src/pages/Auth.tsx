@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -18,20 +19,30 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, user, userRole, loading } = useAuth();
+  const { signIn, signUp, user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && user && userRole) {
-      if (userRole === 'admin') {
-        navigate('/admin');
-      } else if (userRole === 'teacher') {
-        navigate('/teacher');
-      } else if (userRole === 'student') {
-        navigate('/student');
+      const targetRole = queryRole === 'admin' ? 'admin' : queryRole === 'teacher' ? 'teacher' : 'student';
+      
+      if (userRole === targetRole) {
+        if (userRole === 'admin') {
+          navigate('/admin');
+        } else if (userRole === 'teacher') {
+          navigate('/teacher');
+        } else if (userRole === 'student') {
+          navigate('/student');
+        }
+      } else {
+        // Notify the user of the mismatch and sign them out so they can log in to the desired role
+        toast.error(`You need to sign in as a ${targetRole === 'teacher' ? 'teacher' : targetRole === 'admin' ? 'admin' : 'student'}.`);
+        signOut().then(() => {
+          navigate(`/auth?role=${targetRole}`);
+        });
       }
     }
-  }, [user, userRole, loading, navigate]);
+  }, [user, userRole, loading, navigate, queryRole, signOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +93,11 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      {/* University Campus Ambient Background */}
+      <div 
+        className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-15 dark:opacity-25 z-0 pointer-events-none filter grayscale contrast-125 brightness-[0.95]"
+        style={{ backgroundImage: `url('/campus.jpg')` }}
+      />
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

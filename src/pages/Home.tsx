@@ -61,9 +61,13 @@ const Home = () => {
       }
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      {/* University Campus Ambient Background */}
+      <div 
+        className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-15 dark:opacity-25 z-0 pointer-events-none filter grayscale contrast-125 brightness-[0.95]"
+        style={{ backgroundImage: `url('/campus.jpg')` }}
+      />
       <motion.div 
         className="w-full max-w-4xl space-y-10 relative z-10"
         variants={containerVariants}
