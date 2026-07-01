@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await supabase.from('user_roles').upsert(
         { user_id: userId, role: roleFromMeta },
-        { onConflict: 'user_id,role' }
+        { onConflict: 'user_id' }
       );
     } catch (err) {
       console.warn('Could not upsert role:', err);
@@ -145,6 +145,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     fullName: string,
     role: AppRole
   ): Promise<AppRole | null> => {
+    // Check if the email already exists across any roles using the RPC function
+    try {
+      const { data: emailExists, error: rpcError } = await supabase.rpc('check_email_exists', {
+        email_to_check: email
+      });
+
+      if (!rpcError && emailExists) {
+        toast.error('This email is already registered. Please sign in or use a different email.');
+        return null;
+      }
+    } catch (err) {
+      console.warn('Email check failed, proceeding with standard signup:', err);
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -171,7 +185,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         await supabase.from('user_roles').upsert(
           { user_id: data.user.id, role },
-          { onConflict: 'user_id,role' }
+          { onConflict: 'user_id' }
         );
       } catch (err) {
         console.warn('Could not upsert role:', err);

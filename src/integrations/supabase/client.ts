@@ -155,6 +155,40 @@ class MockSupabaseQueryBuilder {
     return { data: Array.isArray(data) ? newRows : newRows[0], error: null };
   }
 
+  async upsert(data: any, options?: any) {
+    const records = JSON.parse(localStorage.getItem(`mock_db_${this.tableName}`) || '[]');
+    const rows = Array.isArray(data) ? data : [data];
+    const conflictTarget = options?.onConflict;
+    
+    const newRows = rows.map((row) => {
+      let existingIndex = -1;
+      if (conflictTarget) {
+        const targets = conflictTarget.split(',');
+        existingIndex = records.findIndex((rec: any) => 
+          targets.every((t: string) => String(rec[t.trim()]) === String(row[t.trim()]))
+        );
+      }
+      
+      const newRow = {
+        id: row.id || (existingIndex >= 0 ? records[existingIndex].id : crypto.randomUUID()),
+        created_at: existingIndex >= 0 ? records[existingIndex].created_at : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...row,
+      };
+      
+      if (existingIndex >= 0) {
+        records[existingIndex] = newRow;
+      } else {
+        records.push(newRow);
+      }
+      
+      return newRow;
+    });
+    
+    localStorage.setItem(`mock_db_${this.tableName}`, JSON.stringify(records));
+    return { data: Array.isArray(data) ? newRows : newRows[0], error: null };
+  }
+
   async update(data: any) {
     let records = JSON.parse(localStorage.getItem(`mock_db_${this.tableName}`) || '[]');
     let updatedRows: any[] = [];
@@ -518,6 +552,17 @@ export const supabase = isProjectInactive
         }
         if (prop === 'from') {
           return (table: string) => new MockSupabaseQueryBuilder(table);
+        }
+        if (prop === 'rpc') {
+          return async (fnName: string, args: any) => {
+            if (fnName === 'check_email_exists') {
+              const emailToCheck = args?.email_to_check?.toLowerCase();
+              const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+              const exists = users.some((u: any) => u.email.toLowerCase() === emailToCheck);
+              return { data: exists, error: null };
+            }
+            return { data: null, error: { message: `Function ${fnName} not mocked` } };
+          };
         }
         return Reflect.get(target, prop, receiver);
       }
