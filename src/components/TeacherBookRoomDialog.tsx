@@ -66,6 +66,7 @@ export const TeacherBookRoomDialog = ({
   const [rooms, setRooms] = useState<any[]>([]);
   const [batches, setBatches] = useState<any[]>([]);
   const [streams, setStreams] = useState<string[]>([]);
+  const [allRoutines, setAllRoutines] = useState<any[]>([]);
   
   // Selection States
   const [selectedFloor, setSelectedFloor] = useState(defaultFloor.toString());
@@ -87,6 +88,7 @@ export const TeacherBookRoomDialog = ({
     if (open) {
       fetchRooms();
       fetchBatches();
+      fetchRoutines();
       
       // Load pre-selected dashboard values
       setSelectedFloor(defaultFloor.toString());
@@ -140,7 +142,14 @@ export const TeacherBookRoomDialog = ({
       setBatches(data || []);
     }
   };
-
+  const fetchRoutines = async () => {
+    const { data, error } = await supabase
+      .from('routines')
+      .select('*');
+    if (!error) {
+      setAllRoutines(data || []);
+    }
+  };
   const checkConflicts = async () => {
     const dayNum = parseInt(selectedDay, 10);
     const slot = TIME_SLOTS.find(s => s.id === parseInt(selectedSlotId, 10));
@@ -340,8 +349,26 @@ export const TeacherBookRoomDialog = ({
   const uniqueBatches = [...new Set(filteredBatches.map((b) => b.batch))];
   const activeSlot = TIME_SLOTS.find(s => s.id === parseInt(selectedSlotId, 10));
 
-  // Filter rooms based on the selected floor
-  const filteredRooms = rooms.filter(r => r.floor_number === parseInt(selectedFloor, 10));
+  // Filter rooms based on the selected floor and availability
+  const availableRooms = rooms.filter(r => {
+    // Must be on the selected floor
+    if (r.floor_number !== parseInt(selectedFloor, 10)) return false;
+    
+    // Must not be busy in the selected slot
+    const slot = TIME_SLOTS.find(s => s.id === parseInt(selectedSlotId, 10));
+    if (!slot) return true;
+    
+    const dayNum = parseInt(selectedDay, 10);
+    const isBusy = allRoutines.some(routine => {
+      if (routine.day_of_week !== dayNum || routine.allocated_room_id !== r.id) return false;
+      
+      const rStart = routine.start_time.slice(0, 5);
+      const rEnd = routine.end_time.slice(0, 5);
+      return rStart < slot.end && rEnd > slot.start;
+    });
+    
+    return !isBusy;
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -391,10 +418,10 @@ export const TeacherBookRoomDialog = ({
               <Label htmlFor="room-select" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">2. Select Room</Label>
               <Select value={selectedRoomId} onValueChange={setSelectedRoomId} required>
                 <SelectTrigger id="room-select" className="bg-background/50 border-glass rounded-xl h-11">
-                  <SelectValue placeholder={filteredRooms.length > 0 ? "Choose room..." : "No rooms on this floor"} />
+                  <SelectValue placeholder={availableRooms.length > 0 ? "Choose free room..." : "No free rooms on this floor"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredRooms.map((room) => (
+                  {availableRooms.map((room) => (
                     <SelectItem key={room.id} value={room.id}>
                       Room {room.room_number} ({room.room_type})
                     </SelectItem>
