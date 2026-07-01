@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Building2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -92,7 +93,19 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-background">
+      {/* Top Floating Controls */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/')}
+          className="border border-glass bg-background/50 hover:bg-glass/80 text-foreground rounded-xl h-10 px-4 active:scale-95 transition-transform"
+        >
+          ← Back to Home
+        </Button>
+        <ThemeToggle />
+      </div>
+
       {/* University Campus Ambient Background */}
       <div 
         className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-15 dark:opacity-25 z-0 pointer-events-none filter grayscale contrast-125 brightness-[0.95]"
