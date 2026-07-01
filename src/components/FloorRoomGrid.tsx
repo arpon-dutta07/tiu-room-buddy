@@ -202,9 +202,10 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
       {/* Day Selector */}
       <Card className="bg-glass border-glass shadow-lg rounded-3xl relative overflow-hidden">
         <CardContent className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-2 flex-1 w-full">
+          <div className="space-y-2 flex-1 w-full overflow-hidden">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Select Day</label>
-            <div className="flex gap-1.5 p-1 bg-background/60 border border-glass rounded-2xl flex-wrap">
+            <div className="overflow-x-auto w-full scrollbar-none pb-0.5">
+              <div className="flex gap-1.5 p-1 bg-background/60 border border-glass rounded-2xl min-w-max">
               {DAYS.map((day, index) => {
                 const isActive = selectedDay === index + 1;
                 return (
@@ -229,7 +230,8 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
               })}
             </div>
           </div>
-          {isAdmin && (
+        </div>
+        {isAdmin && (
             <Button 
               onClick={() => setBookRoomDialogOpen(true)}
               className="bg-primary hover:bg-primary/95 text-white font-semibold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl px-6 self-start md:self-center w-full md:w-auto mt-2 md:mt-0"

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,13 @@ import {
   LayoutGrid, 
   CheckCircle2, 
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  HelpCircle,
+  ChevronDown,
+  User,
+  MessageSquare
 } from 'lucide-react';
-import { motion, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Character-by-character typing text animation component
 const TypingText = ({ text, className = "" }: { text: string; className?: string }) => {
@@ -27,7 +31,7 @@ const TypingText = ({ text, className = "" }: { text: string; className?: string
         hidden: { opacity: 0 },
         visible: {
           opacity: 1,
-          transition: { staggerChildren: 0.02, delayChildren: 0.3 }
+          transition: { staggerChildren: 0.015, delayChildren: 0.2 }
         }
       }}
       initial="hidden"
@@ -38,7 +42,7 @@ const TypingText = ({ text, className = "" }: { text: string; className?: string
         <motion.span
           key={index}
           variants={{
-            hidden: { opacity: 0, y: 4 },
+            hidden: { opacity: 0, y: 3 },
             visible: { opacity: 1, y: 0 }
           }}
           className="inline-block"
@@ -50,9 +54,86 @@ const TypingText = ({ text, className = "" }: { text: string; className?: string
   );
 };
 
+// Animated Number Counter Component
+const CountUp = ({ to, duration = 1.8, suffix = "" }: { to: number; duration?: number; suffix?: string }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = to;
+    if (start === end) return;
+
+    const totalMilliseconds = duration * 1000;
+    const incrementTime = Math.max(Math.floor(totalMilliseconds / end), 25);
+    
+    const timer = setInterval(() => {
+      start += 1;
+      setCount(start);
+      if (start >= end) {
+        clearInterval(timer);
+        setCount(end);
+      }
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [to, duration]);
+
+  return <span>{count}{suffix}</span>;
+};
+
+// FAQ Item Accordion Component
+const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border border-glass bg-glass/25 rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/20">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-5 flex items-center justify-between text-left font-bold text-foreground focus:outline-none transition-colors"
+      >
+        <span className="text-sm md:text-base font-display">{question}</span>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          className="text-primary"
+        >
+          <ChevronDown className="h-5 w-5" />
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <div className="px-5 pb-5 pt-1 text-xs md:text-sm text-muted-foreground font-sans leading-relaxed border-t border-glass/30">
+              {answer}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const Home = () => {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Premium 3D Mouse Tilt Animation Handler
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const box = card.getBoundingClientRect();
+    const x = e.clientX - box.left - box.width / 2;
+    const y = e.clientY - box.top - box.height / 2;
+    card.style.transform = `perspective(1000px) rotateX(${-y / 16}deg) rotateY(${x / 16}deg) scale3d(1.015, 1.015, 1.015)`;
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+  };
 
   if (loading) {
     return (
@@ -73,14 +154,14 @@ const Home = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.08,
         delayChildren: 0.05
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 25 },
     visible: {
       opacity: 1,
       y: 0,
@@ -93,7 +174,7 @@ const Home = () => {
   };
 
   const scrollRevealVariants = {
-    hidden: { opacity: 0, y: 40 },
+    hidden: { opacity: 0, y: 35 },
     visible: {
       opacity: 1,
       y: 0,
@@ -101,7 +182,7 @@ const Home = () => {
         type: "spring",
         stiffness: 60,
         damping: 16,
-        duration: 0.8
+        duration: 0.7
       }
     }
   };
@@ -111,11 +192,11 @@ const Home = () => {
       {/* 3D Floating Ambient Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <motion.div
-          className="absolute top-1/4 -left-12 w-80 h-80 rounded-full bg-gradient-to-tr from-primary/10 to-rose-500/10 blur-3xl opacity-50 dark:opacity-40"
+          className="absolute top-1/6 -left-16 w-96 h-96 rounded-full bg-gradient-to-tr from-primary/10 to-rose-500/10 blur-3xl opacity-50 dark:opacity-40"
           animate={{
-            y: [0, -35, 0],
-            x: [0, 25, 0],
-            scale: [1, 1.1, 1],
+            y: [0, -40, 0],
+            x: [0, 30, 0],
+            scale: [1, 1.12, 1],
           }}
           transition={{
             duration: 8,
@@ -124,10 +205,10 @@ const Home = () => {
           }}
         />
         <motion.div
-          className="absolute bottom-1/4 -right-12 w-96 h-96 rounded-full bg-gradient-to-br from-primary/10 to-rose-600/5 blur-3xl opacity-45 dark:opacity-30"
+          className="absolute bottom-1/3 -right-20 w-[450px] h-[450px] rounded-full bg-gradient-to-br from-primary/10 to-rose-600/5 blur-3xl opacity-45 dark:opacity-30"
           animate={{
-            y: [0, 45, 0],
-            x: [0, -30, 0],
+            y: [0, 50, 0],
+            x: [0, -35, 0],
             scale: [1, 1.08, 1],
           }}
           transition={{
@@ -166,7 +247,7 @@ const Home = () => {
       </header>
 
       {/* Main Content Container */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 md:py-16 relative z-10 flex flex-col justify-center gap-12 md:gap-20">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 md:py-16 relative z-10 flex flex-col justify-center gap-16 md:gap-24">
         
         {/* Hero Section */}
         <motion.div 
@@ -194,7 +275,7 @@ const Home = () => {
           </motion.h1>
           
           <motion.p 
-            className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto font-sans leading-relaxed"
+            className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto font-sans leading-relaxed min-h-[56px]"
             variants={itemVariants}
           >
             <TypingText 
@@ -203,7 +284,7 @@ const Home = () => {
           </motion.p>
         </motion.div>
 
-        {/* Portal Entry Cards */}
+        {/* Portal Entry Cards with cursor 3D Tilt */}
         <motion.div 
           className="grid md:grid-cols-2 gap-8"
           variants={containerVariants}
@@ -213,12 +294,13 @@ const Home = () => {
           {/* Staff & Faculty Portal */}
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -6, scale: 1.005 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden transition-all duration-200"
+            style={{ transformStyle: 'preserve-3d', transform: 'perspective(1000px)' }}
           >
             <div className="absolute top-0 left-0 w-full h-[3px] bg-primary opacity-80" />
-            <div>
+            <div style={{ transform: 'translateZ(30px)' }}>
               <div className="flex items-center gap-4 mb-6">
                 <div className="bg-primary/10 p-3 rounded-2xl border border-primary/10 text-primary group-hover:scale-105 transition-transform duration-300">
                   <UserCog className="h-8 w-8" />
@@ -244,7 +326,7 @@ const Home = () => {
               </ul>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+            <div className="flex flex-col sm:flex-row gap-3 mt-auto" style={{ transform: 'translateZ(40px)' }}>
               <Button 
                 className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl" 
                 onClick={() => navigate('/auth?role=admin')}
@@ -264,13 +346,14 @@ const Home = () => {
           {/* Student Portal */}
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -6, scale: 1.005 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden cursor-pointer"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden cursor-pointer transition-all duration-200"
             onClick={() => navigate('/auth?role=student')}
+            style={{ transformStyle: 'preserve-3d', transform: 'perspective(1000px)' }}
           >
             <div className="absolute top-0 left-0 w-full h-[3px] bg-foreground/40 opacity-80" />
-            <div>
+            <div style={{ transform: 'translateZ(30px)' }}>
               <div className="flex items-center gap-4 mb-6">
                 <div className="bg-secondary/15 p-3 rounded-2xl border border-secondary/10 text-secondary-foreground group-hover:scale-105 transition-transform duration-300">
                   <GraduationCap className="h-8 w-8 text-primary" />
@@ -298,6 +381,7 @@ const Home = () => {
             
             <Button 
               className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-auto animate-pulse"
+              style={{ transform: 'translateZ(40px)' }}
             >
               Student Login
               <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
@@ -305,7 +389,250 @@ const Home = () => {
           </motion.div>
         </motion.div>
 
-        {/* Feature Grid Section - Viewport Animation Reveal */}
+        {/* Stats Row - Animated CountUp Counters */}
+        <motion.section 
+          className="bg-glass border border-glass p-6 sm:p-8 rounded-3xl shadow-md flex flex-wrap justify-around items-center gap-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={scrollRevealVariants}
+        >
+          <div className="text-center">
+            <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">
+              <CountUp to={8} />
+            </span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Floors Tracked</span>
+          </div>
+          <div className="h-8 w-[1px] bg-glass hidden sm:block" />
+          <div className="text-center">
+            <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">
+              <CountUp to={50} suffix="+" />
+            </span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Active Classrooms</span>
+          </div>
+          <div className="h-8 w-[1px] bg-glass hidden sm:block" />
+          <div className="text-center">
+            <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">
+              <CountUp to={100} suffix="%" />
+            </span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Real-time Sync</span>
+          </div>
+        </motion.section>
+
+        {/* How It Works Timeline Section */}
+        <motion.section 
+          className="space-y-12"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-120px" }}
+          variants={scrollRevealVariants}
+        >
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground">How it Works</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans">Streamlining room updates in four simple steps.</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-6 relative">
+            <div className="absolute top-1/2 left-0 w-full h-[1px] bg-glass hidden md:block -z-10" />
+            
+            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 1</span>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Authenticate</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Log in to your dashboard. The system securely identifies whether you are an admin, faculty, or student.
+              </p>
+            </div>
+
+            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 2</span>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Explore Grid</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                View the visual 7-floor master grid. Hover or click to check current room availability summaries.
+              </p>
+            </div>
+
+            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 3</span>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Allocate Room</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Faculty can book free rooms for classes or temporary special slots with automated release timers.
+              </p>
+            </div>
+
+            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 4</span>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Live Update</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Room status updates update all user roles instantly. Active timers release rooms automatically.
+              </p>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Interactive Floor Preview Showcase */}
+        <motion.section 
+          className="space-y-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-120px" }}
+          variants={scrollRevealVariants}
+        >
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground">Interactive Demo</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans">Hover over the room blocks below to preview classroom statuses.</p>
+          </div>
+
+          <div className="bg-glass border border-glass rounded-3xl p-6 md:p-8 shadow-xl">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-glass/30 pb-4 mb-6 gap-3">
+              <div>
+                <h4 className="font-bold text-lg text-foreground font-display">Ground Floor Plan Preview</h4>
+                <p className="text-xs text-muted-foreground">Example live state layout for 9:00 - 10:00 AM slot</p>
+              </div>
+              <div className="flex gap-4 text-xs font-bold font-sans">
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> Free
+                </span>
+                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                  <span className="h-2 w-2 rounded-full bg-rose-500" /> Occupied
+                </span>
+                <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping" /> Special (Temp)
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <motion.div 
+                whileHover={{ scale: 1.03 }}
+                className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm shadow-emerald-500/5"
+              >
+                <span className="font-extrabold text-lg text-emerald-700 dark:text-emerald-400 font-display">G01</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 w-max">FREE</span>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.03 }}
+                className="bg-rose-500/10 border border-rose-500/30 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm shadow-rose-500/5"
+              >
+                <span className="font-extrabold text-lg text-rose-700 dark:text-rose-400 font-display">G02</span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-800 dark:text-rose-300 w-max">OCCUPIED</span>
+                  <span className="text-[9px] text-muted-foreground truncate">Subject: Biotech Lab</span>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.03 }}
+                className="bg-amber-500/10 border border-amber-500/50 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-md shadow-amber-500/10 animate-[pulse_2.2s_infinite]"
+              >
+                <span className="font-extrabold text-lg text-amber-700 dark:text-amber-400 font-display">G03</span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 w-max">SPECIAL</span>
+                  <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400">⚡ 12m 45s left</span>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.03 }}
+                className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm shadow-emerald-500/5"
+              >
+                <span className="font-extrabold text-lg text-emerald-700 dark:text-emerald-400 font-display">G04</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 w-max">FREE</span>
+              </motion.div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Faculty & Student Testimonials Section */}
+        <motion.section 
+          className="space-y-12"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-120px" }}
+          variants={scrollRevealVariants}
+        >
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground flex items-center justify-center gap-2">
+              <MessageSquare className="h-6 w-6 text-primary" />
+              User Testimonials
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans">See what our faculty and students say about SmartRoom Finder.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="bg-glass border-glass rounded-3xl p-6 shadow-md">
+              <CardContent className="p-0 space-y-4">
+                <p className="text-xs sm:text-sm text-muted-foreground italic font-sans leading-relaxed">
+                  "Finding an empty lecture hall or conference room for lab seminars used to take up to 20 minutes of wandering between floors. Now I just check the live matrix and reserve a free room instantly."
+                </p>
+                <div className="flex items-center gap-3 border-t border-glass/30 pt-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-sm text-foreground">Siddharth Sen</h5>
+                    <p className="text-[10px] text-muted-foreground">B.Tech Student, Computer Science</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-glass border-glass rounded-3xl p-6 shadow-md">
+              <CardContent className="p-0 space-y-4">
+                <p className="text-xs sm:text-sm text-muted-foreground italic font-sans leading-relaxed">
+                  "The special temporary slot allocation is a game-changer. I can schedule make-up lectures on any day, and the system automatically updates the student schedule and counts down to release the room when done."
+                </p>
+                <div className="flex items-center gap-3 border-t border-glass/30 pt-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-sm text-foreground">Dr. Ananya Roy</h5>
+                    <p className="text-[10px] text-muted-foreground">Professor, Department of Biotech</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.section>
+
+        {/* Platform FAQs Accordion */}
+        <motion.section 
+          className="space-y-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-120px" }}
+          variants={scrollRevealVariants}
+        >
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground flex items-center justify-center gap-2">
+              <HelpCircle className="h-7 w-7 text-primary" />
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans">Common questions about schedules, roles, and room reservations.</p>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-4">
+            <FAQItem 
+              question="What is the difference between standard and special bookings?" 
+              answer="Standard bookings are recurring classroom routines uploaded by school admins. Special bookings are temporary sessions allocated instantly by teachers (e.g. for make-up lectures, lab exams, or seminars) which automatically expire after a set time."
+            />
+            <FAQItem 
+              question="Can students allocate or book classrooms?" 
+              answer="No. Students have view-only access. They can check real-time availability grids, see which classes are scheduled, and check floor timelines, but only faculty and admins can write or release bookings."
+            />
+            <FAQItem 
+              question="How do the automatic release timers work?" 
+              answer="When a teacher creates a 'Special Instant Booking', they choose a countdown duration (e.g. 30 minutes, 65 minutes). The system registers the precise expiration timestamp and automatically frees the room, returning it to vacant status when the countdown ends."
+            />
+            <FAQItem 
+              question="How does the conflict guard feature work?" 
+              answer="When an admin or teacher attempts to allocate a room, the system checks in real-time if the selected batch or teacher already has another class scheduled during that specific time slot. If a conflict exists, it warns the user immediately."
+            />
+          </div>
+        </motion.section>
+
+        {/* Feature Grid Section */}
         <motion.section 
           className="space-y-8 pt-6"
           initial="hidden"
@@ -350,30 +677,6 @@ const Home = () => {
                 Supabase backend notifies admins, students, and teachers in real-time when allocations change.
               </p>
             </div>
-          </div>
-        </motion.section>
-
-        {/* Stats Row - Viewport Animation Reveal */}
-        <motion.section 
-          className="bg-glass border border-glass p-6 sm:p-8 rounded-3xl shadow-md flex flex-wrap justify-around items-center gap-6"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-120px" }}
-          variants={scrollRevealVariants}
-        >
-          <div className="text-center">
-            <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">8</span>
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Floors Tracked</span>
-          </div>
-          <div className="h-8 w-[1px] bg-glass hidden sm:block" />
-          <div className="text-center">
-            <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">50+</span>
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Active Classrooms</span>
-          </div>
-          <div className="h-8 w-[1px] bg-glass hidden sm:block" />
-          <div className="text-center">
-            <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">100%</span>
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Real-time Sync</span>
           </div>
         </motion.section>
       </main>

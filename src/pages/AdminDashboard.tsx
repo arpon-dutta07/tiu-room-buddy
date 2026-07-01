@@ -117,13 +117,15 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent className="pt-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-background/60 border border-glass p-1.5 rounded-2xl h-auto gap-1.5 mb-6">
-                  <TabsTrigger value="availability" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5">Room Availability</TabsTrigger>
-                  <TabsTrigger value="rooms" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5">Manage Rooms</TabsTrigger>
-                  <TabsTrigger value="schedule" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5">Allocate Rooms</TabsTrigger>
-                  <TabsTrigger value="batches" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5">Batches</TabsTrigger>
-                  <TabsTrigger value="bulk-upload" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5">Bulk Upload</TabsTrigger>
-                </TabsList>
+                <div className="overflow-x-auto w-full scrollbar-none pb-1">
+                  <TabsList className="flex md:grid w-full md:grid-cols-5 bg-background/60 border border-glass p-1.5 rounded-2xl h-auto gap-1.5 mb-6 min-w-max md:min-w-0">
+                    <TabsTrigger value="availability" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5 px-4 md:px-0">Room Availability</TabsTrigger>
+                    <TabsTrigger value="rooms" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5 px-4 md:px-0">Manage Rooms</TabsTrigger>
+                    <TabsTrigger value="schedule" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5 px-4 md:px-0">Allocate Rooms</TabsTrigger>
+                    <TabsTrigger value="batches" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5 px-4 md:px-0">Batches</TabsTrigger>
+                    <TabsTrigger value="bulk-upload" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth py-2.5 px-4 md:px-0">Bulk Upload</TabsTrigger>
+                  </TabsList>
+                </div>
                 
                 <TabsContent value="availability" className="space-y-4 focus-visible:outline-none">
                   {activeTab === 'availability' && <FloorRoomGrid onRoomClick={handleRoomClick} isAdmin={true} />}
