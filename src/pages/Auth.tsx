@@ -94,6 +94,36 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-background">
+      {/* 3D Floating Ambient Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <motion.div
+          className="absolute top-1/4 -left-12 w-80 h-80 rounded-full bg-gradient-to-tr from-primary/10 to-rose-500/10 blur-3xl opacity-50 dark:opacity-40"
+          animate={{
+            y: [0, -35, 0],
+            x: [0, 25, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 -right-12 w-96 h-96 rounded-full bg-gradient-to-br from-primary/10 to-rose-600/5 blur-3xl opacity-45 dark:opacity-30"
+          animate={{
+            y: [0, 45, 0],
+            x: [0, -30, 0],
+            scale: [1, 1.08, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+
       {/* Top Floating Controls */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
         <Button

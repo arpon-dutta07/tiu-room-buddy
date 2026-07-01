@@ -16,7 +16,39 @@ import {
   Sparkles,
   ArrowRight
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
+
+// Character-by-character typing text animation component
+const TypingText = ({ text, className = "" }: { text: string; className?: string }) => {
+  const letters = Array.from(text);
+  return (
+    <motion.span
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: { staggerChildren: 0.02, delayChildren: 0.3 }
+        }
+      }}
+      initial="hidden"
+      animate="visible"
+      className={className}
+    >
+      {letters.map((char, index) => (
+        <motion.span
+          key={index}
+          variants={{
+            hidden: { opacity: 0, y: 4 },
+            visible: { opacity: 1, y: 0 }
+          }}
+          className="inline-block"
+        >
+          {char === " " ? "\u00A0" : char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
 
 const Home = () => {
   const { user, userRole, loading } = useAuth();
@@ -48,7 +80,7 @@ const Home = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 25 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
@@ -60,21 +92,52 @@ const Home = () => {
     }
   };
 
-  const logoVariants = {
-    hidden: { scale: 0.8, opacity: 0 },
+  const scrollRevealVariants = {
+    hidden: { opacity: 0, y: 40 },
     visible: {
-      scale: 1,
       opacity: 1,
+      y: 0,
       transition: {
         type: "spring",
-        stiffness: 100,
-        damping: 15
+        stiffness: 60,
+        damping: 16,
+        duration: 0.8
       }
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col relative bg-background font-sans overflow-x-hidden">
+      {/* 3D Floating Ambient Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <motion.div
+          className="absolute top-1/4 -left-12 w-80 h-80 rounded-full bg-gradient-to-tr from-primary/10 to-rose-500/10 blur-3xl opacity-50 dark:opacity-40"
+          animate={{
+            y: [0, -35, 0],
+            x: [0, 25, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 -right-12 w-96 h-96 rounded-full bg-gradient-to-br from-primary/10 to-rose-600/5 blur-3xl opacity-45 dark:opacity-30"
+          animate={{
+            y: [0, 45, 0],
+            x: [0, -30, 0],
+            scale: [1, 1.08, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+
       {/* Background Campus Illustration Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-[0.06] dark:opacity-[0.12] z-0 pointer-events-none filter grayscale contrast-125 brightness-[0.95]"
@@ -83,17 +146,17 @@ const Home = () => {
 
       {/* Floating Header / Navbar */}
       <header className="sticky top-0 z-50 w-full p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between p-3.5 bg-glass/85 border border-glass backdrop-blur-md rounded-2xl shadow-lg">
+        <div className="max-w-6xl mx-auto flex items-center justify-between p-3.5 bg-glass/85 border border-glass backdrop-blur-md rounded-2xl shadow-lg shadow-glow/5">
           <div className="flex items-center gap-3.5 pl-2 cursor-pointer" onClick={() => navigate('/')}>
             <div className="bg-primary p-2 rounded-xl text-primary-foreground flex items-center justify-center shadow-md shadow-primary/20">
               <Building2 className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight leading-none text-foreground flex items-center gap-1.5">
+              <span className="font-extrabold text-sm tracking-tight leading-none text-foreground flex items-center gap-1.5 font-display">
                 SmartRoom <span className="text-primary">Finder</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               </span>
-              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Techno India University</span>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 font-sans">Techno India University</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -103,7 +166,7 @@ const Home = () => {
       </header>
 
       {/* Main Content Container */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 md:py-16 relative z-10 flex flex-col justify-center gap-12 md:gap-16">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 md:py-16 relative z-10 flex flex-col justify-center gap-12 md:gap-20">
         
         {/* Hero Section */}
         <motion.div 
@@ -114,10 +177,10 @@ const Home = () => {
         >
           <motion.div 
             className="flex justify-center"
-            variants={logoVariants}
+            variants={itemVariants}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-glass bg-glass text-[11px] font-bold uppercase tracking-wider text-primary shadow-sm">
-              <Sparkles className="h-3 w-3 animate-spin-slow" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-glass bg-glass text-[11px] font-bold uppercase tracking-wider text-primary shadow-sm">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
               TIU Live Room Booking System
             </div>
           </motion.div>
@@ -134,8 +197,9 @@ const Home = () => {
             className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto font-sans leading-relaxed"
             variants={itemVariants}
           >
-            Efficient room management system for Techno India University faculty and students. 
-            Track live availability across all 7 floors and book slots immediately.
+            <TypingText 
+              text="Efficient room management system for Techno India University faculty and students. Track live availability across all 7 floors and book slots immediately."
+            />
           </motion.p>
         </motion.div>
 
@@ -149,7 +213,7 @@ const Home = () => {
           {/* Staff & Faculty Portal */}
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4, scale: 1.005 }}
+            whileHover={{ y: -6, scale: 1.005 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden"
           >
@@ -200,7 +264,7 @@ const Home = () => {
           {/* Student Portal */}
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4, scale: 1.005 }}
+            whileHover={{ y: -6, scale: 1.005 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden cursor-pointer"
             onClick={() => navigate('/auth?role=student')}
@@ -233,7 +297,7 @@ const Home = () => {
             </div>
             
             <Button 
-              className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-auto"
+              className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-auto animate-pulse"
             >
               Student Login
               <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
@@ -241,8 +305,14 @@ const Home = () => {
           </motion.div>
         </motion.div>
 
-        {/* Feature Grid Section */}
-        <section className="space-y-8 pt-6">
+        {/* Feature Grid Section - Viewport Animation Reveal */}
+        <motion.section 
+          className="space-y-8 pt-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-120px" }}
+          variants={scrollRevealVariants}
+        >
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground">Platform Features</h2>
             <p className="text-xs sm:text-sm text-muted-foreground font-sans">Everything you need to orchestrate smart classroom tracking.</p>
@@ -281,10 +351,16 @@ const Home = () => {
               </p>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* Stats Row */}
-        <section className="bg-glass border border-glass p-6 sm:p-8 rounded-3xl shadow-md flex flex-wrap justify-around items-center gap-6">
+        {/* Stats Row - Viewport Animation Reveal */}
+        <motion.section 
+          className="bg-glass border border-glass p-6 sm:p-8 rounded-3xl shadow-md flex flex-wrap justify-around items-center gap-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-120px" }}
+          variants={scrollRevealVariants}
+        >
           <div className="text-center">
             <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">8</span>
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Floors Tracked</span>
@@ -299,7 +375,7 @@ const Home = () => {
             <span className="text-3xl sm:text-4xl font-extrabold text-primary font-display block">100%</span>
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground font-sans mt-0.5 block">Real-time Sync</span>
           </div>
-        </section>
+        </motion.section>
       </main>
 
       {/* Footer Section */}
@@ -312,7 +388,7 @@ const Home = () => {
           <div className="flex gap-4">
             <a href="https://technoindiauniversity.ac.in" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">TIU Website</a>
             <span>•</span>
-            <span className="text-foreground/60">Manage Classrooms Smarter</span>
+            <span className="text-foreground/60 font-sans">Manage Classrooms Smarter</span>
           </div>
         </div>
       </footer>
