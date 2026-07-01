@@ -103,7 +103,7 @@ export const RoomBlockDiagram = () => {
         </div>
         <Button 
           onClick={() => setIsAddRoomOpen(true)}
-          className="bg-primary-gradient hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/20 active:scale-95 transition-transform shimmer-hover h-10 rounded-xl px-4"
+          className="bg-primary hover:bg-primary/95 text-white font-semibold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-10 rounded-xl px-4"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Room

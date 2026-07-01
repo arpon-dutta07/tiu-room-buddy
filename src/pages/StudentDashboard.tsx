@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, Home } from 'lucide-react';
 import { FloorRoomGrid } from '@/components/FloorRoomGrid';
 import { RoomTimelineDialog } from '@/components/RoomTimelineDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -54,8 +54,6 @@ const StudentDashboard = () => {
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/5 blur-[120px] pointer-events-none" />
         <div className="animate-pulse text-muted-foreground">Loading dashboard...</div>
       </div>
     );
@@ -70,11 +68,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background bg-gradient-to-br from-background via-card/30 to-primary/5 relative overflow-hidden">
-      {/* Ambient background wash */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary/5 blur-[130px] pointer-events-none dark:bg-primary/10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-secondary/5 blur-[130px] pointer-events-none dark:bg-secondary/10" />
-
+    <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="container mx-auto p-4 md:p-8 relative z-10">
         {/* Header Block */}
         <motion.div 
@@ -85,18 +79,26 @@ const StudentDashboard = () => {
         >
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-              {isTeacher ? 'Teacher' : 'Student'} <span className="text-gradient">Dashboard</span>
+              {isTeacher ? 'Teacher' : 'Student'} <span className="text-primary font-bold">Dashboard</span>
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1 font-sans">
               Techno India University - {isTeacher ? 'Manage Room Bookings' : 'View Room Availability'}
             </p>
           </div>
-          <div className="flex gap-2 items-center w-full sm:w-auto justify-end">
+          <div className="flex gap-2 items-center w-full sm:w-auto justify-end flex-wrap">
             <ThemeToggle />
             <Button 
               variant="outline" 
+              onClick={() => navigate('/')}
+              className="bg-background/50 border-glass rounded-xl px-4 hover:scale-105 active:scale-95 transition-all text-foreground hover:bg-glass/80 font-semibold shadow-sm h-10"
+            >
+              <Home className="h-4 w-4 mr-2 text-primary" />
+              Home
+            </Button>
+            <Button 
+              variant="outline" 
               onClick={handleSignOut}
-              className="bg-background/50 border-glass rounded-xl px-4 hover:scale-105 active:scale-95 transition-all text-foreground hover:bg-glass/80 font-semibold shadow-sm"
+              className="bg-background/50 border-glass rounded-xl px-4 hover:scale-105 active:scale-95 transition-all text-foreground hover:bg-glass/80 font-semibold shadow-sm h-10"
             >
               <LogOut className="h-4 w-4 mr-2 text-primary" />
               Sign Out
@@ -111,8 +113,8 @@ const StudentDashboard = () => {
           transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.08 }}
         >
           <Card className="mb-6 relative overflow-hidden border-glass bg-glass shadow-xl rounded-3xl">
-            {/* Left Brand Gradient Accent Bar */}
-            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary-gradient" />
+            {/* Left Brand Solid Accent Bar */}
+            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary" />
             
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-bold font-display">

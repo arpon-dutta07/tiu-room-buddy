@@ -164,7 +164,7 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                     {isActive && (
                       <motion.div
                         layoutId="activeDayPill"
-                        className="absolute inset-0 bg-primary-gradient rounded-xl -z-10 shadow-md shadow-primary/10"
+                        className="absolute inset-0 bg-primary rounded-xl -z-10 shadow-md shadow-primary/10"
                         transition={{ type: "spring", stiffness: 350, damping: 25 }}
                       />
                     )}

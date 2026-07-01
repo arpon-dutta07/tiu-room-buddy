@@ -423,7 +423,7 @@ export const WeeklySchedule = () => {
                     {isActive && (
                       <motion.div
                         layoutId="activeScheduleDayPill"
-                        className="absolute inset-0 bg-primary-gradient rounded-xl -z-10 shadow-md shadow-primary/10"
+                        className="absolute inset-0 bg-primary rounded-xl -z-10 shadow-md shadow-primary/10"
                         transition={{ type: "spring", stiffness: 350, damping: 25 }}
                       />
                     )}
@@ -614,7 +614,7 @@ export const WeeklySchedule = () => {
                     </div>
 
                     <Button 
-                      className="w-full bg-primary-gradient text-white font-semibold shadow-lg shadow-primary/20 active:scale-95 transition-transform shimmer-hover h-11 rounded-xl mt-4" 
+                      className="w-full bg-primary hover:bg-primary/95 text-white font-semibold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-4" 
                       disabled={!selectedRoutineToAllocate || !selectedRoomToAllocate}
                       onClick={() => allocateRoom(selectedRoutineToAllocate, selectedRoomToAllocate)}
                     >

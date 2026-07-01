@@ -48,42 +48,41 @@
     --status-low-text: #C1152F;
     --status-low-bg: #FCEBEB;
 
-    /* Gradient definitions */
-    --primary-gradient: linear-gradient(135deg, #F2704A 0%, #C1152F 55%, #7A0C13 100%);
+    /* Glass definitions */
     --glass-bg: #FFF8ED;
     --glass-border: rgba(43, 33, 29, 0.08);
     --glass-glow: rgba(193, 21, 47, 0.08);
   }
 
   .dark {
-    /* Dark Mode: Warm Near-Black & Red Identity */
-    --background: 0 20% 4.3%; /* #0D0A0A base */
+    /* Dark Mode: Warm Near-Black & Red Identity (Solid Red & Black) */
+    --background: 0 0% 0%; /* Pure Black Background #000000 */
     --foreground: 12 25% 94%; /* #F5EDEA text primary */
 
-    --card: 7 29% 7.5%; /* #17100F surface */
+    --card: 0 0% 4%; /* Near black card surface #0A0A0A */
     --card-foreground: 12 25% 94%;
 
-    --popover: 7 29% 7.5%;
+    --popover: 0 0% 4%;
     --popover-foreground: 12 25% 94%;
 
-    --primary: 355 76% 59%; /* #FF3B30 */
-    --primary-foreground: 12 25% 94%;
+    --primary: 0 100% 50%; /* Solid Pure Red #FF0000 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 74% 42%; /* #B91C1C */
-    --secondary-foreground: 12 25% 94%;
+    --secondary: 0 80% 40%; /* Solid Deep Red */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 8 20% 12%; 
+    --muted: 0 0% 10%; 
     --muted-foreground: 10 10% 63%; /* #A89A97 text secondary/muted */
 
-    --accent: 0 74% 42%;
-    --accent-foreground: 12 25% 94%;
+    --accent: 0 80% 40%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 355 76% 59%;
-    --destructive-foreground: 12 25% 94%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%; /* rgba(255,255,255,0.08) solid equivalent */
+    --border: 0 0% 15%; /* Solid border */
     --input: 0 0% 15%;
-    --ring: 355 76% 59%;
+    --ring: 0 100% 50%;
 
     /* Semantic Status colors for Dark Mode */
     --status-high-text: #34D399;
@@ -93,11 +92,10 @@
     --status-low-text: #F5793A;
     --status-low-bg: #2A1710;
 
-    /* Gradient definitions */
-    --primary-gradient: linear-gradient(135deg, #FF3B30 0%, #B91C1C 45%, #1A0505 100%);
+    /* Glass definitions */
     --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 90, 70, 0.10);
-    --glass-glow: rgba(255, 59, 48, 0.15);
+    --glass-border: rgba(255, 0, 0, 0.15); /* Red tinted glass border */
+    --glass-glow: rgba(255, 0, 0, 0.15);
   }
 }
 
@@ -117,13 +115,11 @@
 
 @layer utilities {
   .bg-primary-gradient {
-    background: var(--primary-gradient);
+    @apply bg-primary text-primary-foreground;
   }
   
   .text-gradient {
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    @apply text-primary;
   }
   
   .bg-glass {
@@ -188,29 +184,7 @@
   background: hsl(var(--primary) / 0.3);
 }
 
+/* Static solid classes, no shimmer hover effects */
 .shimmer-hover {
-  position: relative;
-  overflow: hidden;
-}
-
-.shimmer-hover::after {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  transform: translateX(-100%);
-  background-image: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.15) 20%,
-    rgba(255, 255, 255, 0.45) 60%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  content: '';
-}
-
-.shimmer-hover:hover::after {
-  transform: translateX(100%);
-  transition: transform 0.8s ease-in-out;
+  /* Disabled gradient shimmer sweep based on user's direct audio request */
 }

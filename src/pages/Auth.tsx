@@ -63,13 +63,11 @@ const Auth = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/5 blur-[120px] pointer-events-none" />
         <div className="flex flex-col items-center gap-4 z-10">
-          <div className="w-16 h-16 rounded-2xl bg-primary-gradient p-4 border border-primary/20 shadow-lg animate-pulse flex items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary p-4 border border-primary/20 shadow-lg animate-pulse flex items-center justify-center">
             <Building2 className="h-8 w-8 text-white" />
           </div>
-          <div className="text-sm font-medium tracking-wider text-muted-foreground animate-pulse">Checking session...</div>
+          <div className="text-sm font-medium tracking-wider text-muted-foreground animate-pulse font-display">Checking session...</div>
         </div>
       </div>
     );
@@ -83,11 +81,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background bg-gradient-to-br from-background via-card/30 to-primary/5">
-      {/* Ambient gradient wash circles */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary/5 blur-[130px] pointer-events-none dark:bg-primary/10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-secondary/5 blur-[130px] pointer-events-none dark:bg-secondary/10" />
-
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -95,11 +89,11 @@ const Auth = () => {
         className="w-full max-w-md z-10"
       >
         <Card className="bg-glass border-glass shadow-2xl rounded-3xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-[4px] bg-primary-gradient" />
+          <div className="absolute top-0 left-0 w-full h-[4px] bg-primary" />
           
           <CardHeader className="text-center space-y-2 pb-6">
             <div className="flex justify-center mb-2">
-              <div className="bg-primary-gradient p-4 rounded-2xl shadow-lg border border-primary/10 text-white flex items-center justify-center">
+              <div className="bg-primary/10 p-4 rounded-2xl border border-primary/10 text-primary flex items-center justify-center">
                 <Building2 className="h-7 w-7" />
               </div>
             </div>
@@ -167,7 +161,7 @@ const Auth = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-primary-gradient hover:opacity-90 text-white font-semibold shadow-lg shadow-primary/20 active:scale-95 transition-transform shimmer-hover h-11 rounded-xl mt-4" 
+                className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-4" 
                 disabled={isLoading}
               >
                 {isLoading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
