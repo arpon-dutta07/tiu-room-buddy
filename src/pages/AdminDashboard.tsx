@@ -80,7 +80,7 @@ const AdminDashboard = () => {
               Techno India University - Room Management & Allocation
             </p>
           </div>
-          <div className="flex gap-2 items-center w-full sm:w-auto justify-end flex-wrap">
+          <div className="flex gap-2 items-center justify-between sm:justify-end w-full sm:w-auto flex-wrap">
             <ThemeToggle />
             <Button 
               variant="outline" 

@@ -137,12 +137,23 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-        <div className="flex flex-col items-center gap-4 z-10">
-          <div className="w-16 h-16 rounded-2xl bg-primary p-4 border border-primary/20 shadow-lg animate-pulse flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-white" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden">
+        {/* Spinner Loader */}
+        <div className="flex flex-col items-center gap-5 z-10">
+          <div className="relative w-20 h-20">
+            <motion.div 
+              className="absolute inset-0 rounded-2xl border-4 border-primary/20"
+              style={{ borderTopColor: 'var(--primary)' }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Building2 className="h-7 w-7 text-primary animate-pulse" />
+            </div>
           </div>
-          <div className="text-sm font-medium tracking-wider text-muted-foreground animate-pulse font-display">Loading system...</div>
+          <div className="text-xs font-extrabold tracking-widest text-primary uppercase animate-pulse font-sans">
+            Checking Session
+          </div>
         </div>
       </div>
     );
@@ -154,7 +165,7 @@ const Home = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.08,
+        staggerChildren: 0.1,
         delayChildren: 0.05
       }
     }
@@ -435,37 +446,109 @@ const Home = () => {
           <div className="grid md:grid-cols-4 gap-6 relative">
             <div className="absolute top-1/2 left-0 w-full h-[1px] bg-glass hidden md:block -z-10" />
             
-            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.015 }}
+              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
               <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 1</span>
               <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Authenticate</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Log in to your dashboard. The system securely identifies whether you are an admin, faculty, or student.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.015 }}
+              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
               <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 2</span>
               <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Explore Grid</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 View the visual 7-floor master grid. Hover or click to check current room availability summaries.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.015 }}
+              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
               <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 3</span>
               <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Allocate Room</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Faculty can book free rooms for classes or temporary special slots with automated release timers.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative">
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.015 }}
+              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
               <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 4</span>
               <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Live Update</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Room status updates update all user roles instantly. Active timers release rooms automatically.
               </p>
-            </div>
+            </motion.div>
+          </div>
+        </motion.section>
+
+        {/* Feature Grid Section - Reordered here! */}
+        <motion.section 
+          className="space-y-8 pt-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-120px" }}
+          variants={scrollRevealVariants}
+        >
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground">Platform Features</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans">Everything you need to orchestrate smart classroom tracking.</p>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
+              <LayoutGrid className="h-7 w-7 text-primary mb-3.5" />
+              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">7-Floor Matrix</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Color-coded occupancy stats showing current slots and vacant capacities floor by floor.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
+              <Clock className="h-7 w-7 text-primary mb-3.5 animate-pulse" />
+              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">Live Timers</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Countdown timers for temporary bookings with automatic release and instant free operations.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
+              <ShieldAlert className="h-7 w-7 text-primary mb-3.5" />
+              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">Conflict Guard</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Instant warnings prevent double-allocations for the same teacher or class batch in any slot.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            >
+              <RefreshCw className="h-7 w-7 text-primary mb-3.5" />
+              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">Real-time Sync</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Supabase backend notifies admins, students, and teachers in real-time when allocations change.
+              </p>
+            </motion.div>
           </div>
         </motion.section>
 
@@ -629,54 +712,6 @@ const Home = () => {
               question="How does the conflict guard feature work?" 
               answer="When an admin or teacher attempts to allocate a room, the system checks in real-time if the selected batch or teacher already has another class scheduled during that specific time slot. If a conflict exists, it warns the user immediately."
             />
-          </div>
-        </motion.section>
-
-        {/* Feature Grid Section */}
-        <motion.section 
-          className="space-y-8 pt-6"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-120px" }}
-          variants={scrollRevealVariants}
-        >
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground">Platform Features</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground font-sans">Everything you need to orchestrate smart classroom tracking.</p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/20 transition-all duration-300">
-              <LayoutGrid className="h-7 w-7 text-primary mb-3.5" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground">7-Floor Matrix</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Color-coded occupancy stats showing current slots and vacant capacities floor by floor.
-              </p>
-            </div>
-
-            <div className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/20 transition-all duration-300">
-              <Clock className="h-7 w-7 text-primary mb-3.5 animate-pulse" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground">Live Timers</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Countdown timers for temporary bookings with automatic release and instant free operations.
-              </p>
-            </div>
-
-            <div className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/20 transition-all duration-300">
-              <ShieldAlert className="h-7 w-7 text-primary mb-3.5" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground">Conflict Guard</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Instant warnings prevent double-allocations for the same teacher or class batch in any slot.
-              </p>
-            </div>
-
-            <div className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/20 transition-all duration-300">
-              <RefreshCw className="h-7 w-7 text-primary mb-3.5" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground">Real-time Sync</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Supabase backend notifies admins, students, and teachers in real-time when allocations change.
-              </p>
-            </div>
           </div>
         </motion.section>
       </main>
