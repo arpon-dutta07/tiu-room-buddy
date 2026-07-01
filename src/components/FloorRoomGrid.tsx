@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { QuickAllocateDialog } from './QuickAllocateDialog';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Room {
   id: string;
@@ -52,7 +52,6 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(TIME_SLOTS[0]);
   const [selectedFloor, setSelectedFloor] = useState(0);
   
-  // Day-wide data lists
   const [allRooms, setAllRooms] = useState<any[]>([]);
   const [allRoutines, setAllRoutines] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -146,55 +145,77 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
   return (
     <div className="space-y-6">
       {/* Day Selector */}
-      <Card>
+      <Card className="bg-glass border-glass shadow-lg rounded-3xl relative overflow-hidden">
         <CardContent className="p-4 space-y-3">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Select Day</label>
-            <div className="flex gap-2 flex-wrap">
-              {DAYS.map((day, index) => (
-                <Button
-                  key={day}
-                  variant={selectedDay === index + 1 ? 'default' : 'outline'}
-                  onClick={() => setSelectedDay(index + 1)}
-                  size="sm"
-                  className="px-4 py-2 font-medium"
-                >
-                  {day}
-                </Button>
-              ))}
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Select Day</label>
+            <div className="flex gap-1.5 p-1 bg-background/60 border border-glass rounded-2xl flex-wrap">
+              {DAYS.map((day, index) => {
+                const isActive = selectedDay === index + 1;
+                return (
+                  <button
+                    key={day}
+                    onClick={() => setSelectedDay(index + 1)}
+                    className={cn(
+                      "relative px-4 py-2 text-sm font-semibold rounded-xl transition-colors duration-200 select-none focus:outline-none",
+                      isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeDayPill"
+                        className="absolute inset-0 bg-primary-gradient rounded-xl -z-10 shadow-md shadow-primary/10"
+                        transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                      />
+                    )}
+                    <span className="relative z-10">{day}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Floor & Time Availability Matrix */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-muted/30">
-          <CardTitle className="text-lg">Master Availability Matrix ({DAYS[selectedDay - 1]})</CardTitle>
-          <p className="text-xs text-muted-foreground">
+      <Card className="border-glass bg-glass shadow-lg rounded-3xl overflow-hidden relative">
+        <CardHeader className="bg-muted/10 border-b border-glass pb-4">
+          <CardTitle className="text-xl font-bold font-display">
+            Master Availability Matrix ({DAYS[selectedDay - 1]})
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
             Click on any cell to view detailed room status below. Colors represent floor occupancies.
           </p>
         </CardHeader>
         <CardContent className="p-4">
           {loading ? (
-            <div className="text-center py-12 text-muted-foreground animate-pulse">Loading availability grid...</div>
+            <div className="text-center py-12 text-muted-foreground animate-pulse font-medium">Loading availability grid...</div>
           ) : allRooms.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">No rooms defined in system. Please add rooms.</div>
+            <div className="text-center py-12 text-muted-foreground bg-background/30 rounded-2xl">No rooms defined in system. Please add rooms.</div>
           ) : (
-            <div className="overflow-x-auto border rounded-lg">
+            <div className="overflow-x-auto border border-glass rounded-2xl shadow-inner bg-background/20">
               <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr className="bg-muted/50 border-b">
-                    <th className="p-3 text-left font-semibold sticky left-0 bg-background border-r min-w-[120px]">Floor</th>
+                  <tr className="bg-muted/30 border-b border-glass">
+                    <th className="p-3 text-left font-bold sticky left-0 bg-card border-r border-glass min-w-[125px] font-display">Floor</th>
                     {TIME_SLOTS.map((slot) => (
-                      <th key={slot.id} className="p-3 text-center font-semibold min-w-[95px]">{slot.label}</th>
+                      <th key={slot.id} className="p-3 text-center font-bold min-w-[100px] font-display">{slot.label}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {FLOORS.map((floor) => (
-                    <tr key={floor.value} className="border-b last:border-0 hover:bg-muted/20">
-                      <td className="p-3 font-medium sticky left-0 bg-background border-r font-semibold">
+                  {FLOORS.map((floor, fIdx) => (
+                    <motion.tr 
+                      key={floor.value} 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: fIdx * 0.04 }}
+                      className={cn(
+                        "border-b border-glass last:border-0 hover:bg-muted/15 transition-colors duration-150",
+                        fIdx % 2 === 0 ? "bg-background/20" : "bg-muted/5"
+                      )}
+                    >
+                      <td className="p-3 font-bold sticky left-0 bg-card border-r border-glass font-display text-foreground">
                         {floor.label}
                       </td>
                       {TIME_SLOTS.map((slot) => {
@@ -204,42 +225,39 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                         let colorClass = 'bg-muted/40 text-muted-foreground border-transparent cursor-not-allowed';
                         if (stats.total > 0) {
                           if (stats.occupied === 0) {
-                            colorClass = isSelected
-                              ? 'bg-green-500/25 text-green-900 dark:text-green-300 ring-2 ring-primary border-primary scale-[1.03] font-bold shadow'
-                              : 'bg-green-500/10 hover:bg-green-500/15 text-green-700 dark:text-green-400 border border-green-500/20 hover:scale-[1.02]';
+                            colorClass = 'status-high';
                           } else if (stats.free === 0) {
-                            colorClass = isSelected
-                              ? 'bg-red-500/25 text-red-900 dark:text-red-300 ring-2 ring-primary border-primary scale-[1.03] font-bold shadow'
-                              : 'bg-red-500/10 hover:bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/20 hover:scale-[1.02]';
+                            colorClass = 'status-low';
                           } else {
-                            colorClass = isSelected
-                              ? 'bg-amber-500/25 text-amber-900 dark:text-amber-300 ring-2 ring-primary border-primary scale-[1.03] font-bold shadow'
-                              : 'bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:scale-[1.02]';
+                            colorClass = 'status-mid';
                           }
                         }
 
                         return (
                           <td key={slot.id} className="p-2 text-center">
                             {stats.total > 0 ? (
-                              <button
+                              <motion.button
+                                whileHover={{ scale: 1.04 }}
+                                whileTap={{ scale: 0.96 }}
                                 onClick={() => {
                                   setSelectedFloor(floor.value);
                                   setSelectedTimeSlot(slot);
                                 }}
                                 className={cn(
-                                  "w-full px-2 py-1.5 rounded text-xs font-semibold transition-all duration-150 select-none",
-                                  colorClass
+                                  "w-full px-2 py-2 rounded-xl text-xs font-bold transition-all select-none border border-transparent shadow-sm font-mono-data hover:shadow-md",
+                                  colorClass,
+                                  isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg z-10 scale-[1.03]"
                                 )}
                               >
                                 {stats.free}/{stats.total} Free
-                              </button>
+                              </motion.button>
                             ) : (
-                              <span className="text-xs text-muted-foreground/50">-</span>
+                              <span className="text-xs text-muted-foreground/40">-</span>
                             )}
                           </td>
                         );
                       })}
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -249,40 +267,46 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
       </Card>
 
       {/* Room Detail Grid */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+      <Card className="border-glass bg-glass shadow-lg rounded-3xl overflow-hidden relative">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-glass bg-muted/10">
           <div>
-            <CardTitle className="text-xl">
+            <CardTitle className="text-xl font-bold font-display text-foreground">
               {FLOORS.find((f) => f.value === selectedFloor)?.label} — {selectedTimeSlot.label} ({DAYS[selectedDay - 1]})
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               Rooms status for the selected matrix cell. Green is free, red is occupied.
             </p>
           </div>
-          <div className="flex gap-4 text-xs font-medium">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3.5 h-3.5 bg-green-500 rounded border border-green-600"></div>
-              <span>Free</span>
+          <div className="flex gap-4 text-xs font-bold">
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full"></div>
+              <span className="text-emerald-700 dark:text-emerald-400">Free</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3.5 h-3.5 bg-red-500 rounded border border-red-600"></div>
-              <span>Occupied</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 bg-rose-500/20 border border-rose-500/30 rounded-full"></div>
+              <span className="text-rose-700 dark:text-rose-400">Occupied</span>
             </div>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
           {loading ? (
-            <div className="text-center py-12 text-muted-foreground">Loading room status...</div>
+            <div className="text-center py-12 text-muted-foreground animate-pulse font-medium">Loading room status...</div>
           ) : roomsToRender.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
+            <div className="text-center py-12 text-muted-foreground bg-muted/10 border border-glass rounded-2xl">
               No rooms defined on this floor. Use the "Manage Rooms" tab to add some.
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <motion.div 
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ staggerChildren: 0.03 }}
+            >
               {roomsToRender.map((room) => (
-                <Button
+                <motion.button
                   key={room.id}
-                  variant="outline"
+                  whileHover={{ scale: 1.04, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => {
                     if (isAdmin) {
                       setSelectedRoomForAllocation(room);
@@ -292,24 +316,27 @@ export const FloorRoomGrid = ({ onRoomClick, isAdmin = false }: FloorRoomGridPro
                     }
                   }}
                   className={cn(
-                    'h-24 flex flex-col items-center justify-center gap-1.5 transition-all duration-150 hover:scale-[1.03] border-2 shadow-sm font-semibold',
+                    'h-24 flex flex-col items-center justify-center gap-1 transition-smooth border rounded-2xl shadow-sm font-semibold relative overflow-hidden',
                     room.isOccupied
-                      ? 'bg-red-500 hover:bg-red-600 text-white border-red-600'
-                      : 'bg-green-500 hover:bg-green-600 text-white border-green-600'
+                      ? 'bg-rose-500/10 hover:bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20 hover:shadow-rose-500/5'
+                      : 'bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:shadow-emerald-500/5'
                   )}
                 >
-                  <span className="text-lg font-bold leading-none">{room.room_number}</span>
-                  <span className="text-[10px] opacity-90 uppercase tracking-wider font-semibold">
+                  <span className="text-xl font-bold font-mono-data tracking-tight leading-none mb-1">{room.room_number}</span>
+                  <span className={cn(
+                    "text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full",
+                    room.isOccupied ? "bg-rose-500/20 text-rose-800 dark:text-rose-300" : "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
+                  )}>
                     {room.isOccupied ? 'Occupied' : 'Free'}
                   </span>
                   {room.isOccupied && room.subject && (
-                    <span className="text-[11px] font-bold truncate w-full px-2 mt-0.5 leading-none">
+                    <span className="text-[10px] font-medium text-muted-foreground truncate w-full px-3 mt-1 text-center">
                       {room.subject}
                     </span>
                   )}
-                </Button>
+                </motion.button>
               ))}
-            </div>
+            </motion.div>
           )}
         </CardContent>
       </Card>
