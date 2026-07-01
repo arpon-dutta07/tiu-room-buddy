@@ -435,120 +435,179 @@ const Home = () => {
           className="space-y-12"
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-120px" }}
-          variants={scrollRevealVariants}
+          viewport={{ once: true, margin: "-80px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.15, delayChildren: 0.1 }
+            }
+          }}
         >
-          <div className="text-center space-y-2">
+          <motion.div 
+            className="text-center space-y-2"
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          >
             <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground">How it Works</h2>
             <p className="text-xs sm:text-sm text-muted-foreground font-sans">Streamlining room updates in four simple steps.</p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-4 gap-6 relative">
-            <div className="absolute top-1/2 left-0 w-full h-[1px] bg-glass hidden md:block -z-10" />
+            {/* Connecting line behind cards */}
+            <div className="absolute top-1/2 left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent hidden md:block -z-10" />
             
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.015 }}
-              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 1</span>
-              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Authenticate</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Log in to your dashboard. The system securely identifies whether you are an admin, faculty, or student.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.015 }}
-              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 2</span>
-              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Explore Grid</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                View the visual 7-floor master grid. Hover or click to check current room availability summaries.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.015 }}
-              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 3</span>
-              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Allocate Room</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Faculty can book free rooms for classes or temporary special slots with automated release timers.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.015 }}
-              className="bg-glass/30 border border-glass rounded-2xl p-5 space-y-3 relative hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <span className="absolute -top-3.5 left-4 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">STEP 4</span>
-              <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display pt-2">Live Update</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Room status updates update all user roles instantly. Active timers release rooms automatically.
-              </p>
-            </motion.div>
+            {[
+              { step: 1, title: "Authenticate", desc: "Log in to your dashboard. The system securely identifies whether you are an admin, faculty, or student.", icon: "🔐" },
+              { step: 2, title: "Explore Grid", desc: "View the visual 7-floor master grid. Hover or click to check current room availability summaries.", icon: "🗺️" },
+              { step: 3, title: "Allocate Room", desc: "Faculty can book free rooms for classes or temporary special slots with automated release timers.", icon: "📋" },
+              { step: 4, title: "Live Update", desc: "Room status updates reach all user roles instantly. Active timers release rooms automatically.", icon: "⚡" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.step}
+                variants={{
+                  hidden: { opacity: 0, y: 40, rotateX: -15 },
+                  visible: { 
+                    opacity: 1, 
+                    y: 0, 
+                    rotateX: 0,
+                    transition: { type: "spring", stiffness: 80, damping: 15 }
+                  }
+                }}
+                whileHover={{ 
+                  y: -8, 
+                  scale: 1.03,
+                  rotateY: 5,
+                  transition: { type: "spring", stiffness: 400, damping: 20 }
+                }}
+                whileTap={{ scale: 0.97 }}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                className="group relative rounded-2xl p-[1px] cursor-pointer"
+                style={{ transformStyle: 'preserve-3d', perspective: '800px' }}
+              >
+                {/* Animated gradient border */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/0 via-primary/0 to-primary/0 group-hover:from-primary/40 group-hover:via-primary/10 group-hover:to-primary/40 transition-all duration-500 opacity-0 group-hover:opacity-100" />
+                
+                {/* Card inner */}
+                <div className="relative bg-glass/40 dark:bg-glass/60 border border-glass rounded-2xl p-5 space-y-3 h-full backdrop-blur-sm group-hover:border-primary/30 group-hover:shadow-[0_8px_40px_-12px] group-hover:shadow-primary/20 transition-all duration-500">
+                  {/* Step badge with pulse ring */}
+                  <div className="absolute -top-3.5 left-4">
+                    <span className="relative flex">
+                      <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-0 group-hover:opacity-20" />
+                      <span className="relative bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg shadow-primary/25">
+                        STEP {item.step}
+                      </span>
+                    </span>
+                  </div>
+                  
+                  {/* Floating emoji icon */}
+                  <motion.div
+                    className="text-2xl pt-2 inline-block"
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
+                  >
+                    {item.icon}
+                  </motion.div>
+                  
+                  <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display group-hover:text-primary transition-colors duration-300">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed group-hover:text-muted-foreground/90 transition-colors duration-300">
+                    {item.desc}
+                  </p>
+                  
+                  {/* Bottom glow line */}
+                  <div className="absolute bottom-0 left-[10%] right-[10%] h-[2px] bg-gradient-to-r from-transparent via-primary/0 to-transparent group-hover:via-primary/50 transition-all duration-700 rounded-full" />
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.section>
 
-        {/* Feature Grid Section - Reordered here! */}
+        {/* Feature Grid Section */}
         <motion.section 
           className="space-y-8 pt-6"
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-120px" }}
-          variants={scrollRevealVariants}
+          viewport={{ once: true, margin: "-80px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.12, delayChildren: 0.05 }
+            }
+          }}
         >
-          <div className="text-center space-y-2">
+          <motion.div 
+            className="text-center space-y-2"
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          >
             <h2 className="text-3xl font-extrabold tracking-tight font-display text-foreground">Platform Features</h2>
             <p className="text-xs sm:text-sm text-muted-foreground font-sans">Everything you need to orchestrate smart classroom tracking.</p>
-          </div>
+          </motion.div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <LayoutGrid className="h-7 w-7 text-primary mb-3.5" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">7-Floor Matrix</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Color-coded occupancy stats showing current slots and vacant capacities floor by floor.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <Clock className="h-7 w-7 text-primary mb-3.5 animate-pulse" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">Live Timers</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Countdown timers for temporary bookings with automatic release and instant free operations.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <ShieldAlert className="h-7 w-7 text-primary mb-3.5" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">Conflict Guard</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Instant warnings prevent double-allocations for the same teacher or class batch in any slot.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-glass border border-glass/40 rounded-2xl p-5 shadow-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-            >
-              <RefreshCw className="h-7 w-7 text-primary mb-3.5" />
-              <h4 className="font-bold text-base mb-1.5 text-foreground font-display">Real-time Sync</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Supabase backend notifies admins, students, and teachers in real-time when allocations change.
-              </p>
-            </motion.div>
+            {[
+              { Icon: LayoutGrid, title: "7-Floor Matrix", desc: "Color-coded occupancy stats showing current slots and vacant capacities floor by floor.", iconAnim: { rotate: [0, 5, -5, 0] } },
+              { Icon: Clock, title: "Live Timers", desc: "Countdown timers for temporary bookings with automatic release and instant free operations.", iconAnim: { rotate: [0, 360] } },
+              { Icon: ShieldAlert, title: "Conflict Guard", desc: "Instant warnings prevent double-allocations for the same teacher or class batch in any slot.", iconAnim: { scale: [1, 1.15, 1] } },
+              { Icon: RefreshCw, title: "Real-time Sync", desc: "Supabase backend notifies admins, students, and teachers in real-time when allocations change.", iconAnim: { rotate: [0, 360] } },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                variants={{
+                  hidden: { opacity: 0, y: 50, scale: 0.9 },
+                  visible: { 
+                    opacity: 1, 
+                    y: 0, 
+                    scale: 1,
+                    transition: { type: "spring", stiffness: 70, damping: 14 }
+                  }
+                }}
+                whileHover={{ 
+                  y: -10, 
+                  scale: 1.04,
+                  transition: { type: "spring", stiffness: 400, damping: 18 }
+                }}
+                whileTap={{ scale: 0.96 }}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                className="group relative rounded-2xl cursor-pointer"
+                style={{ transformStyle: 'preserve-3d', perspective: '800px' }}
+              >
+                {/* Outer glow ring on hover */}
+                <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/30 group-hover:via-transparent group-hover:to-primary/30 transition-all duration-700 opacity-0 group-hover:opacity-100 blur-[1px]" />
+                
+                {/* Card body */}
+                <div className="relative bg-glass/40 dark:bg-glass/60 border border-glass/40 rounded-2xl p-6 h-full backdrop-blur-sm group-hover:border-primary/30 group-hover:shadow-[0_12px_48px_-16px] group-hover:shadow-primary/25 transition-all duration-500 overflow-hidden">
+                  
+                  {/* Background radial glow on hover */}
+                  <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-primary/0 group-hover:bg-primary/8 blur-2xl transition-all duration-700 pointer-events-none" />
+                  
+                  {/* Animated icon container */}
+                  <motion.div
+                    className="relative z-10 w-12 h-12 rounded-xl bg-primary/8 dark:bg-primary/15 border border-primary/10 group-hover:border-primary/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-500"
+                    whileHover={item.iconAnim}
+                    transition={{ duration: item.title === "Live Timers" || item.title === "Real-time Sync" ? 2 : 0.6, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ transform: 'translateZ(25px)' }}
+                  >
+                    <item.Icon className="h-6 w-6 text-primary" />
+                  </motion.div>
+                  
+                  <div style={{ transform: 'translateZ(15px)' }}>
+                    <h4 className="font-bold text-base mb-2 text-foreground font-display group-hover:text-primary transition-colors duration-300">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                  
+                  {/* Bottom shimmer accent */}
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/0 to-transparent group-hover:via-primary/60 transition-all duration-700" />
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.section>
 
