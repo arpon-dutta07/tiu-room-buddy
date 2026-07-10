@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import PremiumLoader from '@/components/PremiumLoader';
+
 // Character-by-character typing text animation component
 const TypingText = ({ text, className = "" }: { text: string; className?: string }) => {
   const letters = Array.from(text);
@@ -139,27 +141,7 @@ const Home = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden">
-        {/* Spinner Loader */}
-        <div className="flex flex-col items-center gap-5 z-10">
-          <div className="relative w-20 h-20">
-            <motion.div 
-              className="absolute inset-0 rounded-2xl border-4 border-primary/20"
-              style={{ borderTopColor: 'var(--primary)' }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Building2 className="h-7 w-7 text-primary animate-pulse" />
-            </div>
-          </div>
-          <div className="text-xs font-extrabold tracking-widest text-primary uppercase animate-pulse font-sans">
-            Checking Session
-          </div>
-        </div>
-      </div>
-    );
+    return <PremiumLoader message="Checking Session" />;
   }
 
   // Animation variants
@@ -233,9 +215,9 @@ const Home = () => {
         />
       </div>
 
-      {/* Background Campus Illustration Overlay */}
+      {/* Background Campus Photo — same style as auth page */}
       <div 
-        className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-[0.06] dark:opacity-[0.12] z-0 pointer-events-none filter grayscale contrast-125 brightness-[0.95]"
+        className="fixed inset-0 bg-cover bg-top bg-no-repeat opacity-[0.15] dark:opacity-[0.25] z-0 pointer-events-none filter grayscale contrast-125 brightness-[0.95]"
         style={{ backgroundImage: `url('/campus.jpg')` }}
       />
 
@@ -439,8 +421,17 @@ const Home = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-4 gap-6 relative">
-            {/* Connecting line behind cards */}
-            <div className="absolute top-1/2 left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent hidden md:block -z-10" />
+            {/* Connecting animated line behind cards */}
+            <div className="absolute top-1/2 left-[8%] right-[8%] h-[2px] hidden md:block -z-10 overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40"
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
+                style={{ transformOrigin: 'left' }}
+              />
+            </div>
             
             {[
               { step: 1, title: "Authenticate", desc: "Log in to your dashboard. The system securely identifies whether you are an admin, faculty, or student.", Icon: KeyRound },
@@ -451,59 +442,66 @@ const Home = () => {
               <motion.div
                 key={item.step}
                 variants={{
-                  hidden: { opacity: 0, y: 40, rotateX: -15 },
+                  hidden: { opacity: 0, y: 50, scale: 0.85 },
                   visible: { 
                     opacity: 1, 
                     y: 0, 
-                    rotateX: 0,
-                    transition: { type: "spring", stiffness: 80, damping: 15 }
+                    scale: 1,
+                    transition: { type: "spring", stiffness: 80, damping: 15, delay: i * 0.1 }
                   }
                 }}
                 whileHover={{ 
-                  y: -8, 
-                  scale: 1.03,
-                  rotateY: 5,
+                  y: -12, 
                   transition: { type: "spring", stiffness: 400, damping: 20 }
                 }}
                 whileTap={{ scale: 0.97 }}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-                className="group relative rounded-2xl p-[1px] cursor-pointer"
-                style={{ transformStyle: 'preserve-3d', perspective: '800px' }}
+                className="group relative cursor-pointer"
               >
-                {/* Animated gradient border */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/0 via-primary/0 to-primary/0 group-hover:from-primary/40 group-hover:via-primary/10 group-hover:to-primary/40 transition-all duration-500 opacity-0 group-hover:opacity-100" />
-                
-                {/* Card inner */}
-                <div className="relative bg-glass/40 dark:bg-glass/60 border border-glass rounded-2xl p-5 space-y-3 h-full backdrop-blur-sm group-hover:border-primary/30 group-hover:shadow-[0_8px_40px_-12px] group-hover:shadow-primary/20 transition-all duration-500">
-                  {/* Step badge with pulse ring */}
-                  <div className="absolute -top-3.5 left-4">
-                    <span className="relative flex">
-                      <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-0 group-hover:opacity-20" />
-                      <span className="relative bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg shadow-primary/25">
-                        STEP {item.step}
-                      </span>
+                {/* Card body */}
+                <div className="relative bg-background/70 dark:bg-background/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 space-y-4 h-full overflow-hidden group-hover:border-primary/40 group-hover:shadow-2xl group-hover:shadow-primary/10 transition-all duration-500">
+                  
+                  {/* Top gradient accent line */}
+                  <div className="absolute top-0 left-0 right-0 h-[2px]">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary"
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6, delay: 0.3 + i * 0.15, ease: "easeOut" }}
+                      style={{ transformOrigin: 'left' }}
+                    />
+                  </div>
+
+                  {/* Background glow on hover */}
+                  <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/0 group-hover:bg-primary/5 blur-3xl transition-all duration-700 pointer-events-none" />
+
+                  {/* Step number + icon row */}
+                  <div className="flex items-center gap-3">
+                    {/* Large step number */}
+                    <span className="text-5xl font-black text-primary/10 group-hover:text-primary/20 transition-colors duration-500 font-display leading-none select-none">
+                      {item.step}
                     </span>
+                    {/* Icon container with ring */}
+                    <motion.div
+                      className="relative w-11 h-11 rounded-xl bg-primary/8 dark:bg-primary/15 border border-primary/15 group-hover:border-primary/40 flex items-center justify-center group-hover:shadow-lg group-hover:shadow-primary/15 transition-all duration-500"
+                      whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <item.Icon className="h-5 w-5 text-primary" />
+                      {/* Outer ring pulse on hover */}
+                      <div className="absolute inset-0 rounded-xl border border-primary/0 group-hover:border-primary/20 group-hover:scale-[1.3] group-hover:opacity-0 transition-all duration-700" />
+                    </motion.div>
                   </div>
                   
-                  {/* Step icon */}
-                  <motion.div
-                    className="pt-2 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/8 dark:bg-primary/15 border border-primary/10 text-primary"
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
-                  >
-                    <item.Icon className="h-5 w-5" />
-                  </motion.div>
-                  
-                  <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display group-hover:text-primary transition-colors duration-300">
+                  <h4 className="font-bold text-base uppercase tracking-wider text-foreground font-display group-hover:text-primary transition-colors duration-300">
                     {item.title}
                   </h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed group-hover:text-muted-foreground/90 transition-colors duration-300">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     {item.desc}
                   </p>
                   
-                  {/* Bottom glow line */}
-                  <div className="absolute bottom-0 left-[10%] right-[10%] h-[2px] bg-gradient-to-r from-transparent via-primary/0 to-transparent group-hover:via-primary/50 transition-all duration-700 rounded-full" />
+                  {/* Bottom shimmer */}
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/0 to-transparent group-hover:via-primary/50 transition-all duration-700 rounded-full" />
                 </div>
               </motion.div>
             ))}
@@ -534,10 +532,10 @@ const Home = () => {
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { Icon: LayoutGrid, title: "7-Floor Matrix", desc: "Color-coded occupancy stats showing current slots and vacant capacities floor by floor.", iconAnim: { rotate: [0, 5, -5, 0] } },
-              { Icon: Clock, title: "Live Timers", desc: "Countdown timers for temporary bookings with automatic release and instant free operations.", iconAnim: { rotate: [0, 360] } },
-              { Icon: ShieldAlert, title: "Conflict Guard", desc: "Instant warnings prevent double-allocations for the same teacher or class batch in any slot.", iconAnim: { scale: [1, 1.15, 1] } },
-              { Icon: RefreshCw, title: "Real-time Sync", desc: "Supabase backend notifies admins, students, and teachers in real-time when allocations change.", iconAnim: { rotate: [0, 360] } },
+              { Icon: LayoutGrid, title: "7-Floor Matrix", desc: "Color-coded occupancy stats showing current slots and vacant capacities floor by floor.", color: "from-blue-500/20 to-indigo-500/20", borderColor: "group-hover:border-blue-400/40" },
+              { Icon: Clock, title: "Live Timers", desc: "Countdown timers for temporary bookings with automatic release and instant free operations.", color: "from-orange-500/20 to-amber-500/20", borderColor: "group-hover:border-orange-400/40" },
+              { Icon: ShieldAlert, title: "Conflict Guard", desc: "Instant warnings prevent double-allocations for the same teacher or class batch in any slot.", color: "from-rose-500/20 to-pink-500/20", borderColor: "group-hover:border-rose-400/40" },
+              { Icon: RefreshCw, title: "Real-time Sync", desc: "Supabase backend notifies admins, students, and teachers in real-time when allocations change.", color: "from-emerald-500/20 to-teal-500/20", borderColor: "group-hover:border-emerald-400/40" },
             ].map((item, i) => (
               <motion.div
                 key={item.title}
@@ -556,31 +554,24 @@ const Home = () => {
                   transition: { type: "spring", stiffness: 400, damping: 18 }
                 }}
                 whileTap={{ scale: 0.96 }}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
                 className="group relative rounded-2xl cursor-pointer"
-                style={{ transformStyle: 'preserve-3d', perspective: '800px' }}
               >
-                {/* Outer glow ring on hover */}
-                <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/30 group-hover:via-transparent group-hover:to-primary/30 transition-all duration-700 opacity-0 group-hover:opacity-100 blur-[1px]" />
-                
                 {/* Card body */}
-                <div className="relative bg-glass/40 dark:bg-glass/60 border border-glass/40 rounded-2xl p-6 h-full backdrop-blur-sm group-hover:border-primary/30 group-hover:shadow-[0_12px_48px_-16px] group-hover:shadow-primary/25 transition-all duration-500 overflow-hidden">
+                <div className={`relative bg-background/70 dark:bg-background/50 backdrop-blur-xl border border-border/50 ${item.borderColor} rounded-2xl p-6 h-full overflow-hidden group-hover:shadow-2xl group-hover:shadow-primary/10 transition-all duration-500`}>
                   
-                  {/* Background radial glow on hover */}
-                  <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-primary/0 group-hover:bg-primary/8 blur-2xl transition-all duration-700 pointer-events-none" />
+                  {/* Background gradient glow on hover */}
+                  <div className={`absolute -top-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 blur-3xl transition-all duration-700 pointer-events-none`} />
                   
-                  {/* Animated icon container */}
+                  {/* Animated icon container with unique coloring */}
                   <motion.div
                     className="relative z-10 w-12 h-12 rounded-xl bg-primary/8 dark:bg-primary/15 border border-primary/10 group-hover:border-primary/30 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-500"
-                    whileHover={item.iconAnim}
-                    transition={{ duration: item.title === "Live Timers" || item.title === "Real-time Sync" ? 2 : 0.6, repeat: Infinity, ease: "easeInOut" }}
-                    style={{ transform: 'translateZ(25px)' }}
+                    whileHover={{ rotate: [0, -8, 8, 0], scale: 1.1 }}
+                    transition={{ duration: 0.5 }}
                   >
                     <item.Icon className="h-6 w-6 text-primary" />
                   </motion.div>
                   
-                  <div style={{ transform: 'translateZ(15px)' }}>
+                  <div>
                     <h4 className="font-bold text-base mb-2 text-foreground font-display group-hover:text-primary transition-colors duration-300">
                       {item.title}
                     </h4>

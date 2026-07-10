@@ -23,10 +23,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const mountTime = useRef(Date.now());
   // This ref prevents onAuthStateChange from overwriting a role
   // that was already explicitly set by signIn / signUp
   const skipNextAuthChange = useRef(false);
   const navigate = useNavigate();
+
+  const resolveLoadingState = () => {
+    const elapsed = Date.now() - mountTime.current;
+    const minimumDelay = 4500; // 4.5 seconds
+    if (elapsed < minimumDelay) {
+      setTimeout(() => {
+        setLoading(false);
+      }, minimumDelay - elapsed);
+    } else {
+      setLoading(false);
+    }
+  };
 
   /**
    * Resolves a user's role:
@@ -90,12 +103,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setTimeout(() => {
             resolveRole(session.user.id, session.user.user_metadata).then((role) => {
               setUserRole(role);
-              setLoading(false);
+              resolveLoadingState();
             });
           }, 0);
         } else {
           setUserRole(null);
-          setLoading(false);
+          resolveLoadingState();
         }
       }
     );
@@ -108,10 +121,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user) {
         resolveRole(session.user.id, session.user.user_metadata).then((role) => {
           setUserRole(role);
-          setLoading(false);
+          resolveLoadingState();
         });
       } else {
-        setLoading(false);
+        resolveLoadingState();
       }
     });
 

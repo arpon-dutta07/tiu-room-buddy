@@ -9,6 +9,8 @@ import { RoomTimelineDialog } from '@/components/RoomTimelineDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 
+import PremiumLoader from '@/components/PremiumLoader';
+
 const StudentDashboard = () => {
   const { user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -52,11 +54,7 @@ const StudentDashboard = () => {
   const expectedRole = isTeacherRoute ? 'teacher' : 'student';
   
   if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-        <div className="animate-pulse text-muted-foreground">Loading dashboard...</div>
-      </div>
-    );
+    return <PremiumLoader message="Loading Dashboard" />;
   }
 
   if (!userRole || userRole !== expectedRole) {

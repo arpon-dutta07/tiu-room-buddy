@@ -7,41 +7,24 @@ interface ProtectedAdminRouteProps {
   children: React.ReactNode;
 }
 
+import PremiumLoader from './PremiumLoader';
+
 const ProtectedAdminRoute = ({ children }: ProtectedAdminRouteProps) => {
   const { user, userRole, loading } = useAuth();
 
   // Show a brief loading state while session is being resolved
   if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden">
-        <div className="flex flex-col items-center gap-5 z-10">
-          <div className="relative w-20 h-20">
-            <motion.div 
-              className="absolute inset-0 rounded-2xl border-4 border-primary/20"
-              style={{ borderTopColor: 'var(--primary)' }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Building2 className="h-7 w-7 text-primary animate-pulse" />
-            </div>
-          </div>
-          <div className="text-xs font-extrabold tracking-widest text-primary uppercase animate-pulse font-sans">
-            Verifying Access
-          </div>
-        </div>
-      </div>
-    );
+    return <PremiumLoader message="Verifying Access" />;
   }
 
-  // Not authenticated → redirect to home
+  // Not authenticated → redirect to admin auth page
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth?role=admin" replace />;
   }
 
-  // Authenticated but not admin → redirect to home
+  // Authenticated but not admin → redirect to admin auth page (triggers auto-logout)
   if (userRole !== 'admin') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth?role=admin" replace />;
   }
 
   // Admin verified → render the admin content

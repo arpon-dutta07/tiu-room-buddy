@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Building2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import PremiumLoader from '@/components/PremiumLoader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Auth = () => {
@@ -23,16 +24,7 @@ const Auth = () => {
   const { signIn, signUp, user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Block access to admin auth page for non-admin users
-  useEffect(() => {
-    if (!loading && queryRole === 'admin') {
-      // If user is logged in but not admin, redirect to home
-      if (user && userRole && userRole !== 'admin') {
-        navigate('/', { replace: true });
-        return;
-      }
-    }
-  }, [loading, user, userRole, queryRole, navigate]);
+
 
   useEffect(() => {
     if (!loading && user && userRole) {
@@ -84,16 +76,7 @@ const Auth = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-        <div className="flex flex-col items-center gap-4 z-10">
-          <div className="w-16 h-16 rounded-2xl bg-primary p-4 border border-primary/20 shadow-lg animate-pulse flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <div className="text-sm font-medium tracking-wider text-muted-foreground animate-pulse font-display">Checking session...</div>
-        </div>
-      </div>
-    );
+    return <PremiumLoader message="Checking Session" />;
   }
 
   // Format the title depending on selected role context
