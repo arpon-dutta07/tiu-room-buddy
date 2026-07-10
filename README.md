@@ -3,6 +3,13 @@
 > A premium, real-time room availability tracking and schedule management system for **Techno India University (TIU)**. Built to optimize campus space utilization for students and administrators alike.
 
 ---
+<img width="1534" height="721" alt="image" src="https://github.com/user-attachments/assets/81589ecd-21cc-4586-a969-6d2052807ce9" />
+<img width="1536" height="719" alt="image" src="https://github.com/user-attachments/assets/ab2430bd-082e-4a1a-a55f-c54b9cf45956" />
+<img width="1536" height="723" alt="image" src="https://github.com/user-attachments/assets/477888db-83c1-4616-964b-1ea94aeb77e4" />
+<img width="1536" height="729" alt="image" src="https://github.com/user-attachments/assets/e00cc7ec-a10f-4132-96ef-37f9dacf64a0" />
+<img width="1536" height="726" alt="image" src="https://github.com/user-attachments/assets/9019465a-91bf-4751-9d1d-e9ede82abeb3" />
+<img width="1536" height="732" alt="image" src="https://github.com/user-attachments/assets/3bb45a0f-01a2-458c-9478-04c84037f91a" />
+
 
 ## 📖 Project Overview
 
