@@ -35,11 +35,56 @@
   - Management of batches and sections with inline creation and deletion options.
 
 ### 🛡️ Core Infrastructure & UX
-* **Role-Based Auth Control**: Custom user roles (Admin, Teacher, Student) that redirect users to their respective workspace dashboard.
+* **Role-Based Auth Control**: Custom user roles (Admin, Teacher, Student) that automatically route users to their respective workspace dashboards.
+* **Admin Route Protection Guard**: Direct visits to `/admin` are strictly protected. Authenticated non-admins or unauthenticated users are automatically redirected to the admin login portal (`/auth?role=admin`). Active student/teacher sessions are automatically cleared during this transition to allow quick admin sign-in.
+* **Artistic Concept Loader**: An innovative, building-themed loading screen where 7 floor bars build up sequentially with animated windows lighting up in waves. Implemented with a minimum display duration of `4.5s` for smooth visual pacing.
 * **Modern Design & Dark Mode**:
   - Premium theme toggles supporting Light, Dark, and System-default views.
   - Clean layout powered by Tailwind CSS and Shadcn UI.
-  - Helpful toast notifications (Sonner/Toaster) for successful operations and system warnings.
+  - Interactive alerts and toasts (Sonner/Toaster) for immediate feedback.
+
+---
+
+## 📸 visual Tour & Showcase
+
+<table width="100%">
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="public/screenshots/screenshot1.png" alt="Portal Selection Page" width="100%"/>
+      <br />
+      <sub><b>Portal Selection Page</b></sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="public/screenshots/screenshot2.png" alt="Role-Based Authentication" width="100%"/>
+      <br />
+      <sub><b>Role-Based Authentication</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="public/screenshots/screenshot3.png" alt="Admin Room Grid & Allocations" width="100%"/>
+      <br />
+      <sub><b>Admin Room Grid & Allocations</b></sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="public/screenshots/screenshot4.png" alt="Interactive Availability Grid" width="100%"/>
+      <br />
+      <sub><b>Interactive Availability Grid</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="public/screenshots/screenshot5.png" alt="Student Availability Panel" width="100%"/>
+      <br />
+      <sub><b>Student Availability Panel</b></sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="public/screenshots/screenshot6.png" alt="Time slots & Routine Matrix" width="100%"/>
+      <br />
+      <sub><b>Time slots & Routine Matrix</b></sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
