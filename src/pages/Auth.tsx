@@ -23,6 +23,17 @@ const Auth = () => {
   const { signIn, signUp, user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Block access to admin auth page for non-admin users
+  useEffect(() => {
+    if (!loading && queryRole === 'admin') {
+      // If user is logged in but not admin, redirect to home
+      if (user && userRole && userRole !== 'admin') {
+        navigate('/', { replace: true });
+        return;
+      }
+    }
+  }, [loading, user, userRole, queryRole, navigate]);
+
   useEffect(() => {
     if (!loading && user && userRole) {
       const targetRole = queryRole === 'admin' ? 'admin' : queryRole === 'teacher' ? 'teacher' : 'student';

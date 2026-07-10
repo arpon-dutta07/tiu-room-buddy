@@ -5,9 +5,44 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 
 // Detect if we should use Mock Supabase.
-// We force mock mode if the Supabase URL points to the inactive/deleted 'jocsuwoozsbokidnsgax' project,
+// We force mock mode if the Supabase URL is empty, points to the inactive project,
 // or if we fail to resolve DNS/connect to it.
-const isProjectInactive = SUPABASE_URL.includes('jocsuwoozsbokidnsgax');
+const isKnownInactive = SUPABASE_URL.includes('jocsuwoozsbokidnsgax') || !SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY;
+
+// Start in mock mode, then try to connect. If connection succeeds, reload with real mode.
+let isProjectInactive = isKnownInactive;
+
+// If not a known-inactive project, probe Supabase connectivity
+if (!isKnownInactive && SUPABASE_URL) {
+  const connectivityChecked = sessionStorage.getItem('supabase_connectivity_checked');
+  const connectivityResult = sessionStorage.getItem('supabase_connectivity_ok');
+  
+  if (connectivityChecked) {
+    // We already checked — use cached result
+    isProjectInactive = connectivityResult !== 'true';
+  } else {
+    // First load — assume mock until connectivity probe completes
+    isProjectInactive = true;
+    
+    // Fire an async connectivity check
+    fetch(`${SUPABASE_URL}/rest/v1/`, {
+      method: 'HEAD',
+      headers: { 'apikey': SUPABASE_PUBLISHABLE_KEY },
+      signal: AbortSignal.timeout(5000),
+    })
+    .then((res) => {
+      sessionStorage.setItem('supabase_connectivity_checked', 'true');
+      sessionStorage.setItem('supabase_connectivity_ok', 'true');
+      // Reload to switch from mock to real mode
+      window.location.reload();
+    })
+    .catch(() => {
+      sessionStorage.setItem('supabase_connectivity_checked', 'true');
+      sessionStorage.setItem('supabase_connectivity_ok', 'false');
+      // Stay in mock mode — no reload needed
+    });
+  }
+}
 
 // Expose status to window for components to show banners/indicators
 (window as any).isMockSupabase = isProjectInactive;

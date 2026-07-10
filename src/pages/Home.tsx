@@ -13,12 +13,15 @@ import {
   RefreshCw, 
   LayoutGrid, 
   CheckCircle2, 
-  Sparkles,
   ArrowRight,
   HelpCircle,
   ChevronDown,
   User,
-  MessageSquare
+  MessageSquare,
+  KeyRound,
+  Grid3X3,
+  CalendarCheck,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -267,16 +270,6 @@ const Home = () => {
           initial="hidden"
           animate="visible"
         >
-          <motion.div 
-            className="flex justify-center"
-            variants={itemVariants}
-          >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-glass bg-glass text-[11px] font-bold uppercase tracking-wider text-primary shadow-sm">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              TIU Live Room Booking System
-            </div>
-          </motion.div>
-          
           <motion.h1 
             className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1] font-display"
             variants={itemVariants}
@@ -302,58 +295,6 @@ const Home = () => {
           initial="hidden"
           animate="visible"
         >
-          {/* Staff & Faculty Portal */}
-          <motion.div
-            variants={itemVariants}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden transition-all duration-200"
-            style={{ transformStyle: 'preserve-3d', transform: 'perspective(1000px)' }}
-          >
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-primary opacity-80" />
-            <div style={{ transform: 'translateZ(30px)' }}>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="bg-primary/10 p-3 rounded-2xl border border-primary/10 text-primary group-hover:scale-105 transition-transform duration-300">
-                  <UserCog className="h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold font-display">Staff & Faculty</h3>
-                  <p className="text-xs text-muted-foreground font-sans uppercase tracking-widest mt-0.5">Administrative & Booking Control</p>
-                </div>
-              </div>
-              <ul className="space-y-3.5 text-sm text-muted-foreground font-sans mb-8">
-                <li className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                  View real-time occupancies across all floors
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                  Allocate rooms & manage scheduling routines (Admins)
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                  Book or release free rooms instantly (Teachers)
-                </li>
-              </ul>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 mt-auto" style={{ transform: 'translateZ(40px)' }}>
-              <Button 
-                className="flex-1 bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl" 
-                onClick={() => navigate('/auth?role=admin')}
-              >
-                Admin Login
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1 border-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground hover:border-transparent active:scale-95 transition-all duration-300 font-bold h-11 rounded-xl" 
-                onClick={() => navigate('/auth?role=teacher')}
-              >
-                Teacher Login
-              </Button>
-            </div>
-          </motion.div>
-
           {/* Student Portal */}
           <motion.div
             variants={itemVariants}
@@ -363,11 +304,11 @@ const Home = () => {
             onClick={() => navigate('/auth?role=student')}
             style={{ transformStyle: 'preserve-3d', transform: 'perspective(1000px)' }}
           >
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-foreground/40 opacity-80" />
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-primary opacity-80" />
             <div style={{ transform: 'translateZ(30px)' }}>
               <div className="flex items-center gap-4 mb-6">
-                <div className="bg-secondary/15 p-3 rounded-2xl border border-secondary/10 text-secondary-foreground group-hover:scale-105 transition-transform duration-300">
-                  <GraduationCap className="h-8 w-8 text-primary" />
+                <div className="bg-primary/10 p-3 rounded-2xl border border-primary/10 text-primary group-hover:scale-105 transition-transform duration-300">
+                  <GraduationCap className="h-8 w-8" />
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold font-display">Student Portal</h3>
@@ -391,10 +332,55 @@ const Home = () => {
             </div>
             
             <Button 
-              className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-auto animate-pulse"
+              className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-auto"
               style={{ transform: 'translateZ(40px)' }}
             >
               Student Login
+              <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </motion.div>
+
+          {/* Teacher Portal */}
+          <motion.div
+            variants={itemVariants}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="bg-glass border border-glass rounded-3xl p-8 shadow-xl shadow-glow-hover flex flex-col justify-between group relative overflow-hidden transition-all duration-200"
+            style={{ transformStyle: 'preserve-3d', transform: 'perspective(1000px)' }}
+          >
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-foreground/40 opacity-80" />
+            <div style={{ transform: 'translateZ(30px)' }}>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="bg-secondary/15 p-3 rounded-2xl border border-secondary/10 text-secondary-foreground group-hover:scale-105 transition-transform duration-300">
+                  <UserCog className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold font-display">Teacher Portal</h3>
+                  <p className="text-xs text-muted-foreground font-sans uppercase tracking-widest mt-0.5">Room Booking & Management</p>
+                </div>
+              </div>
+              <ul className="space-y-3.5 text-sm text-muted-foreground font-sans mb-8">
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  View real-time occupancies across all floors
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  Book or release free rooms instantly
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  Manage scheduling routines & special slots
+                </li>
+              </ul>
+            </div>
+            
+            <Button 
+              className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-lg shadow-primary/10 active:scale-95 transition-transform h-11 rounded-xl mt-auto" 
+              onClick={() => navigate('/auth?role=teacher')}
+              style={{ transform: 'translateZ(40px)' }}
+            >
+              Teacher Login
               <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>
@@ -457,10 +443,10 @@ const Home = () => {
             <div className="absolute top-1/2 left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent hidden md:block -z-10" />
             
             {[
-              { step: 1, title: "Authenticate", desc: "Log in to your dashboard. The system securely identifies whether you are an admin, faculty, or student.", icon: "🔐" },
-              { step: 2, title: "Explore Grid", desc: "View the visual 7-floor master grid. Hover or click to check current room availability summaries.", icon: "🗺️" },
-              { step: 3, title: "Allocate Room", desc: "Faculty can book free rooms for classes or temporary special slots with automated release timers.", icon: "📋" },
-              { step: 4, title: "Live Update", desc: "Room status updates reach all user roles instantly. Active timers release rooms automatically.", icon: "⚡" },
+              { step: 1, title: "Authenticate", desc: "Log in to your dashboard. The system securely identifies whether you are an admin, faculty, or student.", Icon: KeyRound },
+              { step: 2, title: "Explore Grid", desc: "View the visual 7-floor master grid. Hover or click to check current room availability summaries.", Icon: Grid3X3 },
+              { step: 3, title: "Allocate Room", desc: "Faculty can book free rooms for classes or temporary special slots with automated release timers.", Icon: CalendarCheck },
+              { step: 4, title: "Live Update", desc: "Room status updates reach all user roles instantly. Active timers release rooms automatically.", Icon: Zap },
             ].map((item, i) => (
               <motion.div
                 key={item.step}
@@ -500,13 +486,13 @@ const Home = () => {
                     </span>
                   </div>
                   
-                  {/* Floating emoji icon */}
+                  {/* Step icon */}
                   <motion.div
-                    className="text-2xl pt-2 inline-block"
+                    className="pt-2 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/8 dark:bg-primary/15 border border-primary/10 text-primary"
                     animate={{ y: [0, -4, 0] }}
                     transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
                   >
-                    {item.icon}
+                    <item.Icon className="h-5 w-5" />
                   </motion.div>
                   
                   <h4 className="font-bold text-sm uppercase tracking-wider text-foreground font-display group-hover:text-primary transition-colors duration-300">
@@ -631,14 +617,14 @@ const Home = () => {
                 <p className="text-xs text-muted-foreground">Example live state layout for 9:00 - 10:00 AM slot</p>
               </div>
               <div className="flex gap-4 text-xs font-bold font-sans">
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> Free
+                <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400">
+                  <span className="h-2 w-2 rounded-full bg-teal-500" /> Free
                 </span>
                 <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
                   <span className="h-2 w-2 rounded-full bg-rose-500" /> Occupied
                 </span>
-                <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping" /> Special (Temp)
+                <span className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
+                  <span className="h-2.5 w-2.5 rounded-full bg-violet-500" /> Special (Temp)
                 </span>
               </div>
             </div>
@@ -646,40 +632,40 @@ const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <motion.div 
                 whileHover={{ scale: 1.03 }}
-                className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm shadow-emerald-500/5"
+                className="bg-teal-500/10 border border-teal-500/25 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm"
               >
-                <span className="font-extrabold text-lg text-emerald-700 dark:text-emerald-400 font-display">G01</span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 w-max">FREE</span>
+                <span className="font-extrabold text-lg text-teal-700 dark:text-teal-400 font-display">G01</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-800 dark:text-teal-300 w-max">FREE</span>
               </motion.div>
 
               <motion.div 
                 whileHover={{ scale: 1.03 }}
-                className="bg-rose-500/10 border border-rose-500/30 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm shadow-rose-500/5"
+                className="bg-rose-500/8 border border-rose-500/20 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm"
               >
                 <span className="font-extrabold text-lg text-rose-700 dark:text-rose-400 font-display">G02</span>
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-800 dark:text-rose-300 w-max">OCCUPIED</span>
+                  <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-800 dark:text-rose-300 w-max">OCCUPIED</span>
                   <span className="text-[9px] text-muted-foreground truncate">Subject: Biotech Lab</span>
                 </div>
               </motion.div>
 
               <motion.div 
                 whileHover={{ scale: 1.03 }}
-                className="bg-amber-500/10 border border-amber-500/50 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-md shadow-amber-500/10 animate-[pulse_2.2s_infinite]"
+                className="bg-violet-500/10 border border-violet-500/30 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm"
               >
-                <span className="font-extrabold text-lg text-amber-700 dark:text-amber-400 font-display">G03</span>
+                <span className="font-extrabold text-lg text-violet-700 dark:text-violet-400 font-display">G03</span>
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 w-max">SPECIAL</span>
-                  <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400">⚡ 12m 45s left</span>
+                  <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-800 dark:text-violet-300 w-max">SPECIAL</span>
+                  <span className="text-[9px] font-bold text-violet-600 dark:text-violet-400">12m 45s left</span>
                 </div>
               </motion.div>
 
               <motion.div 
                 whileHover={{ scale: 1.03 }}
-                className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm shadow-emerald-500/5"
+                className="bg-teal-500/10 border border-teal-500/25 p-5 rounded-2xl flex flex-col justify-between h-28 cursor-pointer shadow-sm"
               >
-                <span className="font-extrabold text-lg text-emerald-700 dark:text-emerald-400 font-display">G04</span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 w-max">FREE</span>
+                <span className="font-extrabold text-lg text-teal-700 dark:text-teal-400 font-display">G04</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-800 dark:text-teal-300 w-max">FREE</span>
               </motion.div>
             </div>
           </div>
