@@ -52,46 +52,42 @@
 
 ---
 
-## 📸 visual Tour & Showcase
+## 📸 Visual Tour & Showcase
 
-<table width="100%">
-  <tr>
-    <td width="50%" align="center" valign="top">
-      <img src="public/screenshots/screenshot1.png" alt="Portal Selection Page" width="100%"/>
-      <br />
-      <sub><b>Portal Selection Page</b></sub>
-    </td>
-    <td width="50%" align="center" valign="top">
-      <img src="public/screenshots/screenshot2.png" alt="Role-Based Authentication" width="100%"/>
-      <br />
-      <sub><b>Role-Based Authentication</b></sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center" valign="top">
-      <img src="public/screenshots/screenshot3.png" alt="Admin Room Grid & Allocations" width="100%"/>
-      <br />
-      <sub><b>Admin Room Grid & Allocations</b></sub>
-    </td>
-    <td width="50%" align="center" valign="top">
-      <img src="public/screenshots/screenshot4.png" alt="Interactive Availability Grid" width="100%"/>
-      <br />
-      <sub><b>Interactive Availability Grid</b></sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center" valign="top">
-      <img src="public/screenshots/screenshot5.png" alt="Student Availability Panel" width="100%"/>
-      <br />
-      <sub><b>Student Availability Panel</b></sub>
-    </td>
-    <td width="50%" align="center" valign="top">
-      <img src="public/screenshots/screenshot6.png" alt="Time slots & Routine Matrix" width="100%"/>
-      <br />
-      <sub><b>Time slots & Routine Matrix</b></sub>
-    </td>
-  </tr>
-</table>
+<details>
+  <summary>🔍 <b>View Website Screenshots (Click to Expand)</b></summary>
+  <br />
+  <table width="100%">
+    <tr>
+      <td width="33%" align="center" valign="top">
+        <img src="public/screenshots/screenshot1.png" alt="Portal Selection Page" width="100%"/>
+        <br /><sub><b>Portal Selection Page</b></sub>
+      </td>
+      <td width="33%" align="center" valign="top">
+        <img src="public/screenshots/screenshot2.png" alt="Role-Based Authentication" width="100%"/>
+        <br /><sub><b>Role-Based Auth</b></sub>
+      </td>
+      <td width="33%" align="center" valign="top">
+        <img src="public/screenshots/screenshot3.png" alt="Admin Room Grid & Allocations" width="100%"/>
+        <br /><sub><b>Admin Grid & Rooms</b></sub>
+      </td>
+    </tr>
+    <tr>
+      <td width="33%" align="center" valign="top">
+        <img src="public/screenshots/screenshot4.png" alt="Interactive Availability Grid" width="100%"/>
+        <br /><sub><b>Interactive Availability</b></sub>
+      </td>
+      <td width="33%" align="center" valign="top">
+        <img src="public/screenshots/screenshot5.png" alt="Student Availability Panel" width="100%"/>
+        <br /><sub><b>Student Dashboard</b></sub>
+      </td>
+      <td width="33%" align="center" valign="top">
+        <img src="public/screenshots/screenshot6.png" alt="Time slots & Routine Matrix" width="100%"/>
+        <br /><sub><b>Time Slots & Matrix</b></sub>
+      </td>
+    </tr>
+  </table>
+</details>
 
 ---
 
